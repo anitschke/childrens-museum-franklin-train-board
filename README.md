@@ -22,3 +22,10 @@ Downloaded 10.x bundle from https://circuitpython.org/libraries and just install
 Documentation: https://docs.circuitpython.org/projects/matrixportal/en/latest/
 
 Currently using `adafruit-circuitpython-bundle-10.x-mpy-20251004`
+
+## References
+* https://github.com/alejandrorascovan/mta-portal
+* https://jegamboafuentes.medium.com/i-created-my-own-subway-arrival-board-with-real-time-data-to-dont-miss-my-train-anymore-28bfded312c0
+* https://www.mbta.com/developers/v3-api
+* https://github.com/jegamboafuentes/Train_schedule_board
+* https://docs.circuitpython.org/projects/matrixportal/en/latest/
