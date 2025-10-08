@@ -23,6 +23,24 @@ Documentation: https://docs.circuitpython.org/projects/matrixportal/en/latest/
 
 Currently using `adafruit-circuitpython-bundle-10.x-mpy-20251004`
 
+### `settings.toml`
+
+A `settings.toml` must be created at the root directory containing secrets and API keys.
+
+* `CIRCUITPY_WIFI_SSID` and `CIRCUITPY_WIFI_PASSWORD` need to contain the wifi SSID and password so the board can connect to wifi
+* `CIRCUITPY_WEB_API_PASSWORD` should be set to a strong random password. This password can be used to connect remotely to the CircuitPython web server to make live changes to the board.
+* `ADAFRUIT_AIO_USERNAME` and `ADAFRUIT_AIO_KEY` are required so it can connect to the Adafruit NTP time server so it can fetch the current time. A free account can be created at io.adafruit.com .
+
+xxx doc
+```toml
+CIRCUITPY_WIFI_SSID = "REDACTED"
+CIRCUITPY_WIFI_PASSWORD = "REDACTED"
+CIRCUITPY_WEB_API_PASSWORD = "REDACTED"
+CIRCUITPY_WEB_API_PORT = 80
+ADAFRUIT_AIO_USERNAME = "REDACTED"
+ADAFRUIT_AIO_KEY      = "REDACTED"
+```
+
 ## References
 * https://github.com/alejandrorascovan/mta-portal
 * https://jegamboafuentes.medium.com/i-created-my-own-subway-arrival-board-with-real-time-data-to-dont-miss-my-train-anymore-28bfded312c0
