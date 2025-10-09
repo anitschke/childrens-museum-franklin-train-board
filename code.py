@@ -22,6 +22,23 @@ import gc
 
 # xxx doc list of stops https://api-v3.mbta.com/stops?filter%5Broute%5D=CR-Franklin
 
+# xxx also look at
+# https://github.com/mbta/gtfs-documentation/blob/master/reference/gtfs-realtime.md#json-feeds
+# as an alternative If I look at
+# https://cdn.mbta.com/realtime/VehiclePositions_enhanced.json and
+# https://cdn.mbta.com/realtime/VehiclePositions.json I can see that It shows me
+# actual lat / lon of vehicles. So this might give more accurate estimate
+# depending on how often it is updated. Looking at the ETag of the request and
+# the last-modified it seems to show that it really is 100% live. If I diff it
+# in meld I can even see changes in lat / lon live. So the question is will
+# api-v3.mbta.com be just as accurate or should I use cdn.mbta.com/realtime
+# instead? And if I should use cdn.mbta.com/realtime instead is there an easy
+# way to get the data I want.
+#
+#
+
+# xxx get an API get to control versioning: https://www.mbta.com/developers/v3-api/versioning
+
 # xxx this api is pretty good but it has some issues:
 # 
 # * It returns the whole scedule for the entire day including trips that has
@@ -86,6 +103,36 @@ def transform_json(schedule_json):
     times = []
     included = {item["id"]: item for item in schedule_json.get("included", [])}
 
+    # xxx this logic could probably be improved some depending on how accurate
+    # we want to try to get the board:
+    # 
+    # 1. We want to predict the time that the train passes the children's
+    #    museum, not when it arrives at the station. So instead of just looking
+    #    at the station arrival_time or departure_time we should probably look
+    #    at the "direction" of the train and add some offset to either the
+    #    arrival_time or departure_time based on what direction it is going.
+    #
+    # 2. with regards to null arrival times and departure times
+    #    https://www.mbta.com/developers/v3-api/best-practices says:
+    # 
+    #       The departure time is present if, and only if, it's possible for
+    #       riders to board the associated vehicle at the associated stop. A
+    #       null departure time is typically seen at the last stop on a trip.
+    #  
+    #       The arrival time is present if, and only if, it's possible for
+    #       riders to alight from the associated vehicle at the associated stop.
+    #       A null arrival time is typically seen at the first stop on a trip.
+    #  
+    #       In general, we recommend not displaying predictions with null
+    #       departure times, since riders will not be able to board the vehicle.
+    #       If both arrival and departure time are present, the arrival time is
+    #       likely to be more useful to riders.
+    #
+    #    We don't really care about the "can a customer board or not" but I do
+    #    sometimes see some null values in the schedule. I think we need to
+    #    consider the above logic in how we calculate when the train will pass
+    #    by.
+ 
     # Build times list
     for item in schedule_json.get("data", []):
         prediction_ref = item.get("relationships", {}).get("prediction", {}).get("data")
