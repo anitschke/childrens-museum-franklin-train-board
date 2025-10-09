@@ -27,13 +27,18 @@ import gc
 # as an alternative If I look at
 # https://cdn.mbta.com/realtime/VehiclePositions_enhanced.json and
 # https://cdn.mbta.com/realtime/VehiclePositions.json I can see that It shows me
-# actual lat / lon of vehicles. So this might give more accurate estimate
+# actual lat / lon of vehicles. https://cdn.mbta.com/realtime/TripUpdates.json
+# also seems to show live updates. So this might give more accurate estimate
 # depending on how often it is updated. Looking at the ETag of the request and
 # the last-modified it seems to show that it really is 100% live. If I diff it
 # in meld I can even see changes in lat / lon live. So the question is will
 # api-v3.mbta.com be just as accurate or should I use cdn.mbta.com/realtime
 # instead? And if I should use cdn.mbta.com/realtime instead is there an easy
-# way to get the data I want.
+# way to get the data I want. Doing some digging through the General Transit
+# Feed Specification Realtime (GTFS-RT) spec I do not see any way to filter the
+# data. The data that we get from these json files is MASSIVE, I think it will
+# be way too much for us to parse into json and dig through all that data to
+# find what we were looking for.
 #
 #
 
