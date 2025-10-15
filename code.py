@@ -17,6 +17,8 @@ import gc
 #xxx read through https://www.mbta.com/developers/v3-api/best-practices#predictions to see if you are getting it right
 
 # xxx see if you can use sparce fieldsets to request less data: https://www.mbta.com/developers/v3-api/best-practices#sparse-fieldsets
+#
+# working example: https://api-v3.mbta.com/schedules?filter%5Bstop%5D=place-FB-0275&filter%5Broute%5D=CR-Franklin&sort=arrival_time&include=prediction.vehicle&fields[schedule]=arrival_time,departure_time,direction_id&fields[prediction]=arrival_time,arrival_uncertainty,departure_time,departure_uncertainty,direction_id,revenue,status&fields[vehicle]=bearing,current_status,direction_id,latitude,longitude,revenue,speed,updated_at
 
 # xxx doc list of stops https://api-v3.mbta.com/stops?filter%5Broute%5D=CR-Franklin
 
