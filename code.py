@@ -279,3 +279,38 @@ while True:
             print("Some error occured, retrying! -", e)
     matrixPortal.scroll()
     time.sleep(0.03)
+
+class DisplayMode:
+    ARRIVAL_TIMES = 1
+
+# xxx doc
+# xxx test
+class Display:
+    def __init__(self, matrix_portal, text_scroll_delay):
+        self._matrix_portal = matrix_portal
+        self._mode = None
+        self._text_scroll_delay = text_scroll_delay
+        
+        self._arrival_time_indices = None
+    
+    def render_arrival_times(self, times):
+        if self.mode != DisplayMode.ARRIVAL_TIMES:
+            self._initialize_arrival_times()
+        self._matrix_portal.set_text(times[0], self._arrival_time_indices[0])
+        self._matrix_portal.set_text(times[1], self._arrival_time_indices[1])
+        self._matrix_portal.set_text(times[2], self._arrival_time_indices[2])
+
+
+    def _initialize_arrival_times(self):
+        self._matrix_portal.remove_all_text()
+        self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(15, 3), text="Children's Museum of Franklin", is_data=False, scrolling=True)
+        
+        self._arrival_time_indices = [
+            self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(16, 11), text="?min", is_data=False),
+            self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(16, 19), text="?min", is_data=False),
+            self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(16, 27), text="?min", is_data=False),
+        ]
+        self._mode = DisplayMode.ARRIVAL_TIMES
+
+    def scroll_text(self):
+        self._matrix_portal.scroll_text(self._text_scroll_delay)
