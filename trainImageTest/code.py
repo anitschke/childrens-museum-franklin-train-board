@@ -1,5 +1,6 @@
 import time
 import displayio
+import gc
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_matrixportal.matrix import Matrix
 
@@ -10,7 +11,7 @@ from adafruit_matrixportal.matrix import Matrix
 
 WIDTH=64
 HEIGHT=32
-FRAME_DURATION = 0.05
+FRAME_DURATION = 0.1
 
 matrix = Matrix(bit_depth=4)
 sprite_group = displayio.Group()
@@ -35,4 +36,5 @@ while True:
     current_frame = current_frame + 1
     if current_frame >= frame_count:
         current_frame = 0
+        gc.collect() # xxx doc has skip if we don't GC
     sprite_group[0][0] = current_frame
