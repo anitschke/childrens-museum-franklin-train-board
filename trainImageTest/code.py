@@ -36,5 +36,4 @@ while True:
     current_frame = current_frame + 1
     if current_frame >= frame_count:
         current_frame = 0
-        gc.collect() # xxx doc has skip if we don't GC
     sprite_group[0][0] = current_frame

@@ -22,7 +22,7 @@ TMPDIR=$(mktemp -d)
 PADDED="$TMPDIR/padded.bmp"
 
 echo "Creating padded image (${PADDED_WIDTH}px wide)..."
-convert -size ${PADDED_WIDTH}x${HEIGHT} xc:black \
+magick -size ${PADDED_WIDTH}x${HEIGHT} xc:black \
     "$INPUT" -geometry +${WIDTH}+0 -composite "$PADDED"
 
 # --- Extract Smoke Frames and Count ---
@@ -38,7 +38,7 @@ echo "Found $NUM_SMOKE_FRAMES smoke frames."
 for ((s=0; s<NUM_SMOKE_FRAMES; s++)); do
     SMOKE_FRAME_NAME=$(printf "smoke_%04d.png" "$s")
     # Crop each smoke frame and save as PNG (which supports transparency)
-    convert "$SMOKE_SPRITE_SHEET" -crop "${SMOKE_FRAME_WIDTH}x${SMOKE_FRAME_HEIGHT}+0+$((s * SMOKE_FRAME_HEIGHT))" +repage "$TMPDIR/$SMOKE_FRAME_NAME"
+    magick "$SMOKE_SPRITE_SHEET" -crop "${SMOKE_FRAME_WIDTH}x${SMOKE_FRAME_HEIGHT}+0+$((s * SMOKE_FRAME_HEIGHT))" +repage "$TMPDIR/$SMOKE_FRAME_NAME"
 done
 # -------------------------------------
 
@@ -52,7 +52,7 @@ for ((i=0; i<NUM_FRAMES; i++)); do
   FINAL_FRAME="$TMPDIR/$FRAME"              # Final frame with smoke
 
   # 1. Generate the base train frame
-  convert "$PADDED" -crop "${WIDTH}x${HEIGHT}+$i+0" +repage "$CURRENT_TRAIN_FRAME"
+  magick "$PADDED" -crop "${WIDTH}x${HEIGHT}+$i+0" +repage "$CURRENT_TRAIN_FRAME"
 
   # 2. Determine which smoke frame to use (loops the smoke animation)
   SMOKE_FRAME_INDEX=$((i % NUM_SMOKE_FRAMES))
@@ -71,7 +71,7 @@ for ((i=0; i<NUM_FRAMES; i++)); do
   # offset of the frame width minus one pixel per frame
   SMOKE_OFFSET_X=$(($WIDTH-$i))
 
-  convert "$CURRENT_TRAIN_FRAME" \
+  magick "$CURRENT_TRAIN_FRAME" \
       "$CURRENT_SMOKE_FRAME" -transparent black \
       -geometry +${SMOKE_OFFSET_X}+0 \
       -composite "$FINAL_FRAME"
@@ -80,11 +80,16 @@ for ((i=0; i<NUM_FRAMES; i++)); do
     rm "$CURRENT_TRAIN_FRAME"
 done
 
+# Finally add one final black frame at the very end to make sure we don't have
+# any lingering smoke left over
+FINAL_BLACK_FRAME="$TMPDIR/zzz_final_black.bmp"
+magick -size ${WIDTH}x${HEIGHT} xc:black "$FINAL_BLACK_FRAME"
+
 echo "Deleting padded version before building the final sprite sheet"
 rm "$PADDED"
 
 echo "Stacking frames vertically into $OUTPUT..."
-convert -append "$TMPDIR"/*.bmp "$OUTPUT"
+magick convert -type Palette -append "$TMPDIR"/*.bmp "$OUTPUT"
 
 # Clean up
 rm -rf "$TMPDIR"
