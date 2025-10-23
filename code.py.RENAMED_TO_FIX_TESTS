@@ -1,3 +1,5 @@
+# xxx xxx xxx xxx This file is renamed to code.py.RENAMED_TO_FIX_TESTS because without this vscode errors out when trying to runtests because theere is some sort of module name collision or something. SO rennamed for now to fix this. Need to work around this. 
+
 import time
 import microcontroller
 from board import NEOPIXEL

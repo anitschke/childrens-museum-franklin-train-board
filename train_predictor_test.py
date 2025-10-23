@@ -23,26 +23,8 @@ class Test_analyze_data(unittest.TestCase):
         
         count = 1
         result = train_predictor._analyze_data(count, data)
-        self.assertEqual(result.Direction, 2)
-
-
-import unittest
-
-class TestStringMethods(unittest.TestCase):
-
-    def test_upper(self):
-        self.assertEqual('foo'.upper(), 'FOO')
-
-    def test_isupper(self):
-        self.assertTrue('FOO'.isupper())
-        self.assertFalse('Foo'.isupper())
-
-    def test_split(self):
-        s = 'hello world'
-        self.assertEqual(s.split(), ['hello', 'world'])
-        # check that s.split fails when the separator is not a string
-        with self.assertRaises(TypeError):
-            s.split(2)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].direction, 0)
 
 if __name__ == '__main__':
     unittest.main()

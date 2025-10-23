@@ -30,7 +30,9 @@ class TrainPredictor:
     # xxx doc
     def next_trains(self, count):
         schedule_json = self._fetch_schedules_and_predictions()
-        return self._analyze_data(count, schedule_json)
+        results =  self._analyze_data(count, schedule_json)
+        gc.collect()
+        return results
 
     
 
@@ -125,17 +127,4 @@ class TrainPredictor:
         # readable_times = [get_arrival_in_minutes_from_now(now, t) for t in times]
         # print_debug("readable_times:", times)
 
-
-        # # matrix portal expects that we transform the json by modifying the dict
-        # # that we are passed. So instead of returning something we will clear the
-        # # dict and then populate with the times. We only need to populate in three
-        # # of these times since we only show at most three times on the board.
-        # schedule_json.clear()
-        # schedule_json["times"] = readable_times
-
-        # print_debug("transformed json:", schedule_json)
-
-        # Cleanup
-        del trains
-        del included
-        gc.collect()
+        return trains
