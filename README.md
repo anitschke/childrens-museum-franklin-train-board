@@ -43,6 +43,32 @@ Run `install.sh` to install all of the
 
 ## Notes
 
+### `main.py` vs `code.py`
+
+Most circuit python codebases seem to use `code.py` for the main entrypoint file, however circuit python also accept `main.py` as the main entrypoint file. We use `main.py` because VSCode test plugin hits the following error if we attempt to run tests and `code.py` exists. So we will just work around this and name the entry point file `main.py` instead.
+
+```
+Traceback (most recent call last):
+  File "/home/anitschk/.vscode/extensions/ms-python.python-2025.16.0-linux-x64/python_files/unittestadapter/execution.py", line 24, in <module>
+    from django_handler import django_execution_runner  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anitschk/.vscode/extensions/ms-python.python-2025.16.0-linux-x64/python_files/unittestadapter/django_handler.py", line 15, in <module>
+    from pvsc_utils import (  # noqa: E402
+        VSCodeUnittestError,
+    )
+  File "/home/anitschk/.vscode/extensions/ms-python.python-2025.16.0-linux-x64/python_files/unittestadapter/pvsc_utils.py", line 6, in <module>
+    import doctest
+  File "/usr/lib/python3.13/doctest.py", line 101, in <module>
+    import pdb
+  File "/usr/lib/python3.13/pdb.py", line 77, in <module>
+    import code
+  File "/home/anitschk/sandbox/childrens-museum-franklin-train-board/code.py", line 4, in <module>
+    import microcontroller
+ModuleNotFoundError: No module named 'microcontroller'
+Finished running tests!
+```
+
+
 ### Read Only Filesystem
 
 https://github.com/adafruit/circuitpython/issues/9528#issuecomment-2293527157
