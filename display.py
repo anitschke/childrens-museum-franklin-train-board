@@ -42,7 +42,7 @@ class Display:
 
     def _initialize_arrival_times(self):
         self._matrix_portal.remove_all_text()
-        
+
         self._matrix_portal.set_background('/background.bmp')
         self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(15, 3), text="Children's Museum of Franklin", is_data=False, scrolling=True)
         
@@ -63,7 +63,7 @@ class Display:
         # After we have rendered the train replace the root group to make sure
         # we remove any existing train animation and then run the GC to free up
         # all the memory from the animation.
-        self._matrix_portal.root_group = displayio.Group()
+        self._matrix_portal.display.root_group = displayio.Group()
         gc.collect()
     
     def _render_train(self, direction):
@@ -72,7 +72,7 @@ class Display:
         # Now that wae have removed all text replace the root group to make sure
         # there is nothing else being displayed.
         sprite_group = displayio.Group()
-        self._matrix_portal.root_group = sprite_group
+        self._matrix_portal.display.root_group = sprite_group
         gc.collect()
 
         WIDTH=64
