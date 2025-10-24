@@ -11,11 +11,19 @@ class DisplayMode:
     TRAIN = 2
 
 # xxx doc
+class DisplayDependencies:
+    def __init__(self,  matrix_portal, time_conversion):
+        self.matrix_portal = matrix_portal
+        self.time_conversion = time_conversion
+
+# xxx doc
 # xxx test
+
 class Display:
-    def __init__(self, matrix_portal, time_conversion, text_scroll_delay, train_frame_duration):
-        self._matrix_portal = matrix_portal
-        self._time_conversion = time_conversion
+    def __init__(self, dependencies : DisplayDependencies, text_scroll_delay, train_frame_duration):
+        self._matrix_portal = dependencies.matrix_portal
+        self._time_conversion = dependencies.time_conversion
+
         self._mode = None
         self._text_scroll_delay = text_scroll_delay
         self._train_frame_duration = train_frame_duration

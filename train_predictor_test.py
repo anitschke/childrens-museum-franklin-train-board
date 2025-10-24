@@ -1,4 +1,4 @@
-from train_predictor import TrainPredictor, Direction
+from train_predictor import TrainPredictor, TrainPredictorDependencies, Direction
 from datetime import datetime
 import json
 import os
@@ -15,13 +15,21 @@ def load_test_schedule_json(file):
     with open(file_path, 'r') as file:
         return json.load(file)
 
+class MockResponse:
+    def __init__(self, jsonResponse):
+        self._jsonResponse = jsonResponse
+    
+    def json(self):
+        return self._jsonResponse
+
 class MockNetwork:
     def add_json_content_type(self, type):
         return
     def fetch(self, url, timeout=30):
         with urllib.request.urlopen(url) as response:
             data = response.read()
-            return json.loads(data.decode('utf-8'))
+            jsonData = json.loads(data.decode('utf-8'))
+            return MockResponse(jsonData)
     
 class Test_next_trains(unittest.TestCase):
     def test_next_trains(self):
@@ -39,7 +47,8 @@ class Test_next_trains(unittest.TestCase):
         now = datetime.now()
         mock_now = lambda : now.replace(tzinfo=None, hour=1)
 
-        train_predictor = TrainPredictor(MockNetwork(), datetime, mock_now)
+        deps = TrainPredictorDependencies(MockNetwork(), datetime, mock_now)
+        train_predictor = TrainPredictor(deps)
         results = train_predictor.next_trains(count=1)
 
         self.assertEqual(len(results), 1)
@@ -65,7 +74,8 @@ class Test_fetch_schedules_and_predictions(unittest.TestCase):
         # We will use Test_next_trains to connect together testing for
         # _fetch_schedules_and_predictions and _analyze_data to make sure we can
         # actually analyze data that is currently coming out of the API.
-        train_predictor = TrainPredictor(MockNetwork(), None, None)
+        deps = TrainPredictorDependencies(MockNetwork(), datetime=None, nowFcn=None)
+        train_predictor = TrainPredictor(deps)
         train_predictor._fetch_schedules_and_predictions()    
 
 class Test_analyze_data(unittest.TestCase):
@@ -74,7 +84,8 @@ class Test_analyze_data(unittest.TestCase):
         # Simple test with best case where we have both the schedule data and
         # prediction data for a train.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple.json')
         
@@ -90,7 +101,8 @@ class Test_analyze_data(unittest.TestCase):
         # amount of data that I think we can get away with requesting at the
         # moment.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_sparse.json')
         
@@ -104,7 +116,8 @@ class Test_analyze_data(unittest.TestCase):
         # When there is no prediction data in the JSON from the MBTA we should
         # fallback to using the schedule time
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_no_prediction.json')
         
@@ -118,7 +131,8 @@ class Test_analyze_data(unittest.TestCase):
         # There are multiple possible results that could be returned but only
         # one is requested
         mock_now = mock_now_func('2025-10-22T04:06:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('multiple_results.json')
         
@@ -132,7 +146,8 @@ class Test_analyze_data(unittest.TestCase):
         # There are two possible results that could be returned but three are
         # requested
         mock_now = mock_now_func('2025-10-22T04:06:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('multiple_results.json')
         
@@ -149,6 +164,7 @@ class Test_analyze_data(unittest.TestCase):
         # There are multiple possible results that could be returned but only
         # one is requested
         mock_now = mock_now_func('2025-10-22T05:06:20-04:00')
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
         train_predictor = TrainPredictor(None, datetime, mock_now, filterResultsAfterSeconds=10)
 
         data = load_test_schedule_json('multiple_results.json')
@@ -164,7 +180,8 @@ class Test_analyze_data(unittest.TestCase):
 
     def test_data_array_empty(self):
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('data_array_empty.json')
         
@@ -175,7 +192,8 @@ class Test_analyze_data(unittest.TestCase):
 
     def test_no_data_property(self):
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        train_predictor = TrainPredictor(None, datetime, mock_now)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, nowFcn=mock_now)
+        train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('no_data_property.json')
         

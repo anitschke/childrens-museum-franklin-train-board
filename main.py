@@ -1,9 +1,10 @@
 import time
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_datetime import datetime
-from train_predictor import TrainPredictor
-from time_conversion import TimeConversion
-from display import Display
+from train_predictor import TrainPredictor, TrainPredictorDependencies
+from time_conversion import TimeConversion, TimeConversionDependencies
+from display import Display, DisplayDependencies
+from application import Application, ApplicationDependencies
 
 #xxx remove unused imports
 
@@ -44,32 +45,9 @@ def print_debug(*args):
 
 
 # xxx set the status led
-matrixPortal = MatrixPortal(debug=DEBUG)
-train_predictor = TrainPredictor(matrixPortal.network, datetime, datetime.now)
-time_conversion = TimeConversion(datetime, datetime.now)
-display = Display(matrixPortal, time_conversion, text_scroll_delay=0.1, train_frame_duration=0.1)
+matrix_portal = MatrixPortal(debug=DEBUG)
+train_predictor = TrainPredictor(TrainPredictorDependencies(matrix_portal.network, datetime, datetime.now))
+time_conversion = TimeConversion(TimeConversionDependencies(datetime, datetime.now))
+display = Display(DisplayDependencies(matrix_portal, time_conversion), text_scroll_delay=0.1, train_frame_duration=0.1)
 
-
-# xxx doc sync current time
-# xxx is there any time float, I should probably update the time every once in a while.
-matrixPortal.network.get_local_time(location="America/New_York")
-
-
-last_check = None
-
-trains = [None, None, None]
-while True:
-    if last_check is None or time.monotonic() > last_check + 180: #xxx check more frequently
-        try:
-            trains = train_predictor.next_trains(count = 3)
-            last_check = time.monotonic()
-        except (ValueError, RuntimeError) as e:
-            print("Some error occured, retrying! -", e)
-    
-    if trains[0] is not None and time_conversion.time_is_soon(trains[0].time):
-        display.render_train(trains[0].direction)
-    else:
-        display.render_arrival_times(trains)
-        display.scroll_text()
-
-
+app = Application(ApplicationDependencies(matrix_portal, train_predictor, time_conversion, display))

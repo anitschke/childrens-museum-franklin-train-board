@@ -43,6 +43,10 @@ Run `install.sh` to install all of the
 
 ## Notes
 
+### dependency injection
+
+xxx comments on how I am doing dependency injection and how that makes it easier to test
+
 ### `main.py` vs `code.py`
 
 Most circuit python codebases seem to use `code.py` for the main entrypoint file, however circuit python also accept `main.py` as the main entrypoint file. We use `main.py` because VSCode test plugin hits the following error if we attempt to run tests and `code.py` exists. So we will just work around this and name the entry point file `main.py` instead.

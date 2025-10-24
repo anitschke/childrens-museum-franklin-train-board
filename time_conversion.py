@@ -1,12 +1,18 @@
 import math
 
 # xxx doc
+class TimeConversionDependencies:
+    def __init__(self, datetime, nowFcn):
+        self.datetime = datetime
+        self.nowFcn = nowFcn
 
+
+# xxx doc
 
 class TimeConversion:
-    def __init__(self, datetime, nowFcn):
-        self._datetime = datetime
-        self._nowFcn = nowFcn
+    def __init__(self, dependencies: TimeConversionDependencies):
+        self._datetime = dependencies.datetime
+        self._nowFcn = dependencies.nowFcn
 
     # xxx doc
     # xxx test

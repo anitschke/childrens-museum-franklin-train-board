@@ -92,12 +92,17 @@ class TrainArrival:
     def sort_by_time(train):
         return train.time      
 
-class TrainPredictor:
-    def __init__(self, network, datetime, nowFcn, filterResultsAfterSeconds = 120):
-        self._network = network
+class TrainPredictorDependencies:
+    def __init__(self, network, datetime, nowFcn):
+        self.network = network 
+        self.datetime = datetime 
+        self.nowFcn = nowFcn 
 
-        self._datetime = datetime
-        self._nowFcn = nowFcn
+class TrainPredictor:
+    def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 120):
+        self._network = dependencies.network
+        self._datetime = dependencies.datetime
+        self._nowFcn = dependencies.nowFcn
 
         self._filterResultsAfterSeconds = filterResultsAfterSeconds
     
