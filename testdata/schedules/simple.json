@@ -46,7 +46,7 @@
       "attributes": {
         "arrival_time": "2025-10-22T23:04:53-04:00",
         "arrival_uncertainty": null,
-        "departure_time": "2025-10-22T23:06:00-04:00",
+        "departure_time": "2025-10-22T23:05:11-04:00",
         "departure_uncertainty": null,
         "direction_id": 0,
         "last_trip": false,

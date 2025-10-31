@@ -93,18 +93,25 @@ class TrainArrival:
         return train.time      
 
 class TrainPredictorDependencies:
-    def __init__(self, network, datetime, nowFcn):
+    def __init__(self, network, datetime, timedelta, nowFcn):
         self.network = network 
         self.datetime = datetime 
+        self.timedelta = timedelta
         self.nowFcn = nowFcn 
 
 class TrainPredictor:
-    def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 120):
+    def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 120, inboundOffsetAverageSeconds=0, inboundOffsetStdDevSeconds=0, outboundOffsetAverageSeconds=0, outboundOffsetStdDevSeconds=0):
         self._network = dependencies.network
         self._datetime = dependencies.datetime
+        self._timedelta = dependencies.timedelta
         self._nowFcn = dependencies.nowFcn
 
         self._filterResultsAfterSeconds = filterResultsAfterSeconds
+
+        self._inboundOffsetAverage = self._timedelta(seconds = inboundOffsetAverageSeconds)
+        self._inboundOffsetStdDev = self._timedelta(seconds = inboundOffsetStdDevSeconds)
+        self._outboundOffsetAverage = self._timedelta(seconds = outboundOffsetAverageSeconds)
+        self._outboundOffsetStdDev = self._timedelta(seconds = outboundOffsetStdDevSeconds)
     
         # The MBTA API responds with a content type header of
         # "application/vnd.api+json". When the matrix portal looks at the
@@ -124,14 +131,74 @@ class TrainPredictor:
         gc.collect()
         return results
 
-    
-
     def _fetch_schedules_and_predictions(self):
         # xxx move DATA_SOURCE into TrainPredictor?
         # xxx what do I want for a timeout here?
         response = self._network.fetch(DATA_SOURCE, timeout=10)
         return response.json()
     
+    # xxx test
+    def _compute_train(self, schedule, prediction):
+            
+        cmf_arrival_time = self._get_estimated_cmf_arrival_time(schedule, prediction)
+        if cmf_arrival_time is None:
+            return None
+        
+        # xxx also add data like the std devieaion and "has passed"
+
+        # xxx it would be a lot more efficient to do the check to see if we need
+        # to keep the train around here and just return None if the train has
+        # passed by rather than add it to an array that will get even bigger and
+        # take up more memory that we need to eventually filter down.
+
+        # xxx we could also do some things to make it more efficient like if the
+        # train is more than 4 or 8 or 12 hours away then don't bother returning
+        # it too
+
+        direction = schedule.get("direction_id")
+        train = TrainArrival(cmf_arrival_time, direction)
+        return train
+
+    # xxx test
+    # xxx doc
+    def _get_estimated_cmf_arrival_time(self, schedule, prediction):
+        # Prefer using prediction data if possible
+        if prediction is not None:
+            result = self._compute_cmf_arrival_time(prediction.get("direction_id"), prediction.get("arrival_time"), prediction.get("departure_time"))
+            if result is not None:
+                return result
+        
+        # Fall back to using schedule data
+        return self._compute_cmf_arrival_time(schedule.get("direction_id"), schedule.get("arrival_time"), schedule.get("departure_time"))
+
+    def _compute_cmf_arrival_time(self, direction, arrival_time, departure_time):
+        # We are using the Franklin station for our predictions since it is
+        # closest to the Children's Museum of Franklin. The Children's Museum of
+        # Franklin is on the outbound side of the Franklin station. So for
+        # inbound trains we will watch for the arrival time at the Franklin
+        # station since the train will pass by Children's Museum of Franklin
+        # before it gets to the station. For outbound trains we will watch the
+        # departure time from the Franklin station since the train will pass by
+        # the Children's Museum of Franklin after the train departs from the
+        # station.
+        #
+        # If the preferred time is not available we will fall back to using the
+        # other time. This is since we still want to use prediction data over
+        # using schedule or not coming up with an answer at all.
+        #
+        # xxx doc point to analysis page
+
+        station_time_str = (arrival_time or departure_time) if direction == Direction.IN_BOUND else (departure_time or arrival_time)
+        station_time = self._datetime.fromisoformat(station_time_str).replace(tzinfo=None)
+
+        # Since the Children's Museum of Franklin isn't exactly at the Franklin
+        # station we need to apply an offset to station time to give a better
+        # estimate of when the train will pass by Children's Museum of Franklin.
+        offset = self._inboundOffsetAverage if direction == Direction.IN_BOUND else self._outboundOffsetAverage
+        cmf_time = station_time + offset
+        return cmf_time
+
+
     def _analyze_data(self, count, schedule_json):
         gc.collect()
         trains = []
@@ -169,25 +236,17 @@ class TrainPredictor:
     
         # Build trains list
         for item in schedule_json.get("data", []):
+
+            # Get prediction if available
+            perdition = None 
             prediction_ref = item.get("relationships", {}).get("prediction", {}).get("data")
-            prediction_time = None
-
-            # Prefer prediction if available
             if prediction_ref and prediction_ref.get("id") in included:
-                pred = included[prediction_ref["id"]]["attributes"]
-                prediction_time = pred.get("arrival_time") or pred.get("departure_time")
+                perdition = included[prediction_ref["id"]]["attributes"]
 
-            # Fallback to schedule times if prediction missing
+            # Compute the train object
             schedule_attrs = item.get("attributes", {})
-            schedule_time = (
-                schedule_attrs.get("arrival_time")
-                or schedule_attrs.get("departure_time")
-            )
-
-            time_str = prediction_time or schedule_time
-            if time_str:
-                direction = schedule_attrs.get("direction_id")
-                train = TrainArrival(time_str, direction)
+            train = self._compute_train(schedule_attrs, perdition)
+            if train is not None:
                 trains.append(train)
 
         # Sort the list
@@ -202,7 +261,7 @@ class TrainPredictor:
         # implement time.gmtime" errors.
         now = self._nowFcn()
         # print_debug("now:", now)
-        trains = [t for t in trains if (self._datetime.fromisoformat(t.time).replace(tzinfo=None) - now).total_seconds() >= (-1 * self._filterResultsAfterSeconds)]
+        trains = [t for t in trains if (t.time - now).total_seconds() >= (-1 * self._filterResultsAfterSeconds)]
         # print_debug("filtered trains:", trains)
 
         # We only need "count" times as we only display that many on the board. So we
