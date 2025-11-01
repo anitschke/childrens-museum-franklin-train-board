@@ -75,7 +75,11 @@ Finished running tests!
 
 ### Read Only Filesystem
 
+xxx
+
 https://github.com/adafruit/circuitpython/issues/9528#issuecomment-2293527157
+
+xxx then reinstall
 
 ## References
 * https://github.com/alejandrorascovan/mta-portal
