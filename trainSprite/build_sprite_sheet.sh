@@ -5,7 +5,7 @@
 
 INPUT="trainSrc.bmp"
 SMOKE_SPRITE_SHEET="smokeSpriteSrc.bmp"
-OUTPUT="train.bmp"
+OUTPUT="../train.bmp"
 GIF_OUTPUT="train.gif"
 GIF_OUTPUT_SCALED="trainScaled.gif"
 WIDTH=64
@@ -96,9 +96,16 @@ rm "$PADDED"
 # options I have to make it smaller since we are starting to get close to
 # filling up the flash memory on the board.
 
+# xxx doc
 echo "Stacking frames vertically into $OUTPUT..."
-magick convert -type Palette -append "$TMPDIR"/*.bmp "$OUTPUT"
+magick convert -type Palette -append "$TMPDIR"/*.bmp "$TMPDIR"/train_full_color.bmp
+magick convert "$TMPDIR"/train_full_color.bmp  -colors 16 "$OUTPUT"
+rm "$TMPDIR"/train_full_color.bmp
+
+echo "Stacking frames vertically into $GIF_OUTPUT..."
 magick -delay 5 -loop 0 -dispose Background -background black "$TMPDIR"/*.bmp "$GIF_OUTPUT"
+
+echo "Stacking frames vertically into $GIF_OUTPUT_SCALED..."
 magick -delay 5 -loop 0 -dispose Background -background black "$TMPDIR"/*.bmp -filter point -scale $((WIDTH * 8))x$((HEIGHT * 8)) "$GIF_OUTPUT_SCALED"
 
 # Clean up
