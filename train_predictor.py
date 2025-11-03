@@ -1,5 +1,6 @@
 # xxx doc
 import gc
+import time
 
 #xxx read through https://www.mbta.com/developers/v3-api/best-practices#predictions to see if you are getting it right
 
@@ -90,10 +91,13 @@ def direction_str(direction):
         return "IN_BOUND"
     return "UNKNOWN"
 
+# xxx doc
+# xxx doc std_dev
 class TrainArrival:
-    def __init__(self, time, direction):
+    def __init__(self, time, direction, std_dev):
         self.time = time
         self.direction = direction
+        self.std_dev = std_dev
 
     def str(self):
         return f"time: {self.time}, direction: {direction_str(self.direction)}"
@@ -101,6 +105,16 @@ class TrainArrival:
     @staticmethod
     def sort_by_time(train):
         return train.time      
+
+# xxx doc
+class TrainWarning:
+    def __init__(self, end_monotonic, direction):
+        self._end_monotonic = end_monotonic
+        self.direction = direction
+
+    def shouldStop(self) -> bool:
+        # xxx test
+        return time.monotonic() > self._end_monotonic
 
 class TrainPredictorDependencies:
     def __init__(self, network, datetime, timedelta, nowFcn):
@@ -110,13 +124,14 @@ class TrainPredictorDependencies:
         self.nowFcn = nowFcn 
 
 class TrainPredictor:
-    def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 120, inboundOffsetAverageSeconds=0, inboundOffsetStdDevSeconds=0, outboundOffsetAverageSeconds=0, outboundOffsetStdDevSeconds=0):
+    def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 120, trainWarningSeconds = 0, inboundOffsetAverageSeconds=0, inboundOffsetStdDevSeconds=0, outboundOffsetAverageSeconds=0, outboundOffsetStdDevSeconds=0):
         self._network = dependencies.network
         self._datetime = dependencies.datetime
         self._timedelta = dependencies.timedelta
         self._nowFcn = dependencies.nowFcn
 
         self._filterResultsAfterSeconds = filterResultsAfterSeconds
+        self._trainWarningOffset = self._timedelta(seconds=trainWarningSeconds)
 
         self._inboundOffsetAverage = self._timedelta(seconds = inboundOffsetAverageSeconds)
         self._inboundOffsetStdDev = self._timedelta(seconds = inboundOffsetStdDevSeconds)
@@ -141,6 +156,23 @@ class TrainPredictor:
         gc.collect()
         return results
 
+    def train_passing_warning(self, train: TrainArrival):
+        if train is None:
+            return None
+
+        # xxx test
+        # xxx doc talk about the statistics
+        now = self._nowFcn()
+        warning_start_time = train.time - self._trainWarningOffset -  (2 * train.std_dev)
+        if warning_start_time > now:
+            return None
+        warning_stop_time = train.time + (3 * train.std_dev)
+        remaining_seconds = (warning_stop_time - now).total_seconds()
+        now_monatomic = time.monotonic()
+        end_monatomic = now_monatomic + remaining_seconds
+        
+        return TrainWarning(end_monatomic, train.direction)
+
     def _fetch_schedules_and_predictions(self):
         # xxx move DATA_SOURCE into TrainPredictor?
         # xxx what do I want for a timeout here?
@@ -149,12 +181,14 @@ class TrainPredictor:
     
     # xxx test
     def _compute_train(self, schedule, prediction):
-            
-        cmf_arrival_time = self._get_estimated_cmf_arrival_time(schedule, prediction)
+        
+        direction = schedule.get("direction_id")
+
+        cmf_arrival_time = self._get_estimated_cmf_arrival_time(schedule, prediction, direction)
         if cmf_arrival_time is None:
             return None
         
-        # xxx also add data like the std devieaion and "has passed"
+        std_dev = self._inboundOffsetStdDev if direction == Direction.IN_BOUND else self._outboundOffsetStdDev
 
         # xxx it would be a lot more efficient to do the check to see if we need
         # to keep the train around here and just return None if the train has
@@ -165,16 +199,16 @@ class TrainPredictor:
         # train is more than 4 or 8 or 12 hours away then don't bother returning
         # it too
 
-        direction = schedule.get("direction_id")
-        train = TrainArrival(cmf_arrival_time, direction)
+        
+        train = TrainArrival(cmf_arrival_time, direction, std_dev)
         return train
 
     # xxx test
     # xxx doc
-    def _get_estimated_cmf_arrival_time(self, schedule, prediction):
+    def _get_estimated_cmf_arrival_time(self, schedule, prediction, direction):
         # Prefer using prediction data if possible
         if prediction is not None:
-            result = self._compute_cmf_arrival_time(prediction.get("direction_id"), prediction.get("arrival_time"), prediction.get("departure_time"))
+            result = self._compute_cmf_arrival_time(direction, prediction.get("arrival_time"), prediction.get("departure_time"))
             if result is not None:
                 return result
         
@@ -289,3 +323,4 @@ class TrainPredictor:
         # print_debug("readable_times:", times)
 
         return trains
+    

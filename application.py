@@ -124,9 +124,11 @@ class Application:
             
     def _run_loop(self):
         while True:
-            self._fetch_next_trains()
-            if self._trains[0] is not None and self._time_conversion.time_is_soon(self._trains[0].time):
-                self._try_method(self._display.render_train, [self._trains[0].direction])
+            self._try_method(self._fetch_next_trains)
+            train_warning = self._try_method(self._train_predictor.train_passing_warning, [self._trains[0]])
+            if train_warning is not None:
+                while not train_warning.shouldStop():
+                    self._try_method(self._display.render_train, [train_warning.direction])
             else:
                 self._try_method(self._display.render_arrival_times, [self._trains])
                 self._try_method(self._display.scroll_text)

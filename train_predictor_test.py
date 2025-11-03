@@ -88,7 +88,7 @@ class Test_analyze_data(unittest.TestCase):
         # the departure prediction time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
         deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now)
-        train_predictor = TrainPredictor(deps)
+        train_predictor = TrainPredictor(deps, outboundOffsetStdDevSeconds=4321)
 
         data = load_test_schedule_json('simple_outbound.json')
         
@@ -97,6 +97,7 @@ class Test_analyze_data(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].direction, Direction.OUT_BOUND)
         self.assertEqual(result[0].time.isoformat(), "2025-10-22T23:05:11")
+        self.assertEqual(result[0].std_dev, timedelta(seconds=4321))
 
     def test_simple_inbound(self):
         # Simple test with best case where we have both the schedule data and
@@ -107,7 +108,7 @@ class Test_analyze_data(unittest.TestCase):
         # the arrival prediction time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
         deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now)
-        train_predictor = TrainPredictor(deps)
+        train_predictor = TrainPredictor(deps, inboundOffsetStdDevSeconds=1234)
 
         data = load_test_schedule_json('simple_inbound.json')
         
@@ -116,6 +117,7 @@ class Test_analyze_data(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].direction, Direction.IN_BOUND)
         self.assertEqual(result[0].time.isoformat(), "2025-10-22T23:04:53")
+        self.assertEqual(result[0].std_dev, timedelta(seconds=1234))
 
     def test_simple_outbound_positive_offset(self):
         # Simple test with best case where we have both the schedule data and
