@@ -26,7 +26,7 @@ A `settings.toml` must be created inside this directory containing secrets and A
 
 * `CIRCUITPY_WIFI_SSID` and `CIRCUITPY_WIFI_PASSWORD` need to contain the wifi SSID and password so the board can connect to wifi
 * `CIRCUITPY_WEB_API_PASSWORD` should be set to a strong random password. This password can be used to connect remotely to the CircuitPython web server to make live changes to the board.
-* `ADAFRUIT_AIO_USERNAME` and `ADAFRUIT_AIO_KEY` are required so it can connect to the Adafruit NTP time server so it can fetch the current time. A free account can be created at io.adafruit.com .
+* `ADAFRUIT_AIO_USERNAME` and `ADAFRUIT_AIO_KEY` are required so it can push logs to the adafruit.io log feed and connect to the adafruit.io NTP time server so it can fetch the current time. A free account can be created at io.adafruit.com . xxx instructions on creating a feed
 
 xxx doc
 ```toml

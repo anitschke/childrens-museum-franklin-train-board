@@ -1,4 +1,5 @@
 import time
+import supervisor
 
 #xxx remove unused imports
 
@@ -30,20 +31,19 @@ import time
 
 DEBUG=True
 
-# xxx doc
-# xxx add more debugging
-def print_debug(*args):
-    if DEBUG:
-        print(*args, sep="\n")
+
+#xxx add a bunch of error protection
 
 NUM_TRAINS_TO_FETCH=3
 
 class ApplicationDependencies:
-    def __init__(self, matrix_portal, train_predictor, time_conversion, display):
+    def __init__(self, matrix_portal, train_predictor, time_conversion, display, nowFcn, logger):
         self.matrix_portal  = matrix_portal 
         self.train_predictor  = train_predictor 
         self.time_conversion  = time_conversion 
         self.display = display
+        self.nowFcn = nowFcn
+        self.logger = logger
 
 class Application:
     def __init__(self, dependencies: ApplicationDependencies ):
@@ -51,39 +51,84 @@ class Application:
         self._train_predictor  = dependencies.train_predictor 
         self._time_conversion  = dependencies.time_conversion 
         self._display = dependencies.display
+        self._nowFcn = dependencies.nowFcn
+        self._logger = dependencies.logger
 
         self._last_train_check = None
         self._trains = [None] * NUM_TRAINS_TO_FETCH
+
+        self._last_nightly_tasks_run = time.monotonic()
 
     def run(self):
         self._startup()
         self._run_loop()
 
     def _startup(self):
-        self._sync_clock()
+        self._logger.info("starting train board")
+        self._try_method(self._sync_clock)
+
+    # xxx doc
+    def _try_method(self, method, positional_arguments = [], keyword_arguments = {}):
+        attempt_count = 0
+        max_attempt_count = 5
+        retry_delay = 5
+        restart_delay = 60
+
+        while attempt_count < max_attempt_count:
+            attempt_count += 1
+            try:
+                return method(*positional_arguments, **keyword_arguments)
+            except Exception as e:
+                self._logger.exception(e)
+                # xxx show some display on the board that there was an error or whatever
+            time.sleep(retry_delay)
+            self._logger.debug(f"making additional attempt {attempt_count}")
+
+        self._display.render_error()
+        time.sleep(restart_delay)
+        supervisor.reload()
+            
+
+    def _nightly_tasks(self):
+        # xxx doc
+        if time.monotonic() < self._last_nightly_tasks_run + 86400:
+            return
+        
+        now = self._nowFcn()
+        if now.hour < 3 or now.hour >3:
+            return
+
+        self._logger.debug("running nightly tasks")
+        self._try_method(self._sync_clock)
+        self._try_method(self._add_watchdog_log)
+
+    def _add_watchdog_log(self):
+        # xxx doc
+        self._logger.info("I am alive")
+
 
     # xxx doc
     def _sync_clock(self):
         # xxx doc sync current time
         # xxx is there any time float, I should probably update the time every once in a while.
         # xxx double check that calling this multiple times will actually sync the time multiple times
+        self._logger.debug("getting network time")
         self._matrix_portal.network.get_local_time(location="America/New_York")
 
     def _fetch_next_trains(self):
         if self._last_train_check is None or time.monotonic() > self._last_train_check + 180: #xxx check more frequently
-            try:
-                self._trains = self._train_predictor.next_trains(count = NUM_TRAINS_TO_FETCH)
-                self._last_train_check  = time.monotonic()
-            except (ValueError, RuntimeError) as e:
-                 print("Some error occured, retrying! -", e) # xxx add error logging and error handler
+            self._logger.debug("fetching trains")
+            self._trains = self._try_method(self._train_predictor.next_trains, [NUM_TRAINS_TO_FETCH])
+            self._last_train_check  = time.monotonic()
+            self._logger.debug(f"trains: {[t.str() for t in self._trains]}")
             
     def _run_loop(self):
         while True:
             self._fetch_next_trains()
             if self._trains[0] is not None and self._time_conversion.time_is_soon(self._trains[0].time):
-                self._display.render_train(self._trains[0].direction)
+                self._try_method(self._display.render_train, [self._trains[0].direction])
             else:
-                self._display.render_arrival_times(self._trains)
-                self._display.scroll_text()
+                self._try_method(self._display.render_arrival_times, [self._trains])
+                self._try_method(self._display.scroll_text)
 
 

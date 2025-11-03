@@ -83,10 +83,20 @@ class Direction:
     OUT_BOUND = 0
     IN_BOUND = 1
 
+def direction_str(direction):
+    if direction == Direction.OUT_BOUND:
+        return "OUT_BOUND"
+    if direction == Direction.IN_BOUND:
+        return "IN_BOUND"
+    return "UNKNOWN"
+
 class TrainArrival:
     def __init__(self, time, direction):
         self.time = time
         self.direction = direction
+
+    def str(self):
+        return f"time: {self.time}, direction: {direction_str(self.direction)}"
 
     @staticmethod
     def sort_by_time(train):

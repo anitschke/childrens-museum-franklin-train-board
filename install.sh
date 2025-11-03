@@ -34,6 +34,7 @@ rsync -av --inplace \
     $SCRIPT_DIR/main.py  \
     $SCRIPT_DIR/time_conversion.py  \
     $SCRIPT_DIR/train_predictor.py  \
+    $SCRIPT_DIR/logging.py  \
     \
     $SCRIPT_DIR/background.bmp  \
     $SCRIPT_DIR/train.bmp  \

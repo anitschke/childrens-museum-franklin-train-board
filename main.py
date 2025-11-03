@@ -1,7 +1,8 @@
 import time
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_datetime import datetime,timedelta
-import adafruit_logging as logging
+
+import logging
 from train_predictor import TrainPredictor, TrainPredictorDependencies
 from time_conversion import TimeConversion, TimeConversionDependencies
 from display import Display, DisplayDependencies
@@ -35,30 +36,19 @@ from application import Application, ApplicationDependencies
 # careful about when we send the HTTP request so that it isn't in the middle of
 # an animation or something.
 
-logger = logging.getLogger('test')
 
-logger.setLevel(logging.ERROR)
-logger.info('Info message')
-logger.error('Error message')
-
-
-DEBUG=True
-
-
-
-
-# xxx doc
-# xxx add more debugging
-def print_debug(*args):
-    if DEBUG:
-        print(*args, sep="\n")
-
+# xxx reduce to error or info
 
 # xxx set the status led
-matrix_portal = MatrixPortal(debug=DEBUG)
+matrix_portal = MatrixPortal()
+
+log_levels = logging.LogLevels(aio_handler=logging.INFO, print_handler=logging.DEBUG)
+logger = logging.newLogger(logging.LoggerDependencies(matrix_portal), log_levels)
+
 train_predictor = TrainPredictor(TrainPredictorDependencies(matrix_portal.network, datetime, timedelta, datetime.now))
 time_conversion = TimeConversion(TimeConversionDependencies(datetime.now))
-display = Display(DisplayDependencies(matrix_portal, time_conversion), text_scroll_delay=0.1, train_frame_duration=0.1)
+display = Display(DisplayDependencies(matrix_portal, time_conversion, logger), text_scroll_delay=0.1, train_frame_duration=0.1)
 
-app = Application(ApplicationDependencies(matrix_portal, train_predictor, time_conversion, display))
+app = Application(ApplicationDependencies(matrix_portal, train_predictor, time_conversion, display, datetime.now, logger))
+
 app.run()
