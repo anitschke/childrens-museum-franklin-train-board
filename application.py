@@ -103,7 +103,7 @@ class Application:
         self._try_method(self._add_watchdog_log)
 
     def _add_watchdog_log(self):
-        # xxx doc
+        # xxx doc have a watchdog setup on adafruit IO to allert me if we stop getting logs, This make sure we always have some logs.
         self._logger.info("I am alive")
 
 
