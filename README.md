@@ -6,7 +6,7 @@ xxx add animation of train here
 
 xxx add recording of display
 
-
+xxx link to https://github.com/anitschke/childrens-museum-franklin-train-board-data-analysis
 
 ## Maxtrix Portal Setup
 
