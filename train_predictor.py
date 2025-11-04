@@ -150,8 +150,11 @@ class TrainArrival:
         self.direction = direction
         self.std_dev = std_dev
 
-    def str(self):
-        return f"time: {self.time}, direction: {direction_str(self.direction)}, std_dev: {self.std_dev}"
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"TrainArrival(schedule_id={self.schedule_id}, time={self.time}, direction={direction_str(self.direction)}, std_dev={self.std_dev})"
 
     @staticmethod
     def sort_by_time(train):

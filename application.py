@@ -127,7 +127,7 @@ class Application:
             self._logger.debug("fetching trains")
             self._trains = self._try_method(self._train_predictor.next_trains, [NUM_TRAINS_TO_FETCH])
             self._last_train_check  = time.monotonic()
-            self._logger.debug(f"trains: {[t.str() for t in self._trains]}")
+            self._logger.debug(f"trains: {self._trains}")
             
     def _run_loop(self):
         while True:
