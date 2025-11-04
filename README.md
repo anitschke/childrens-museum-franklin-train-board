@@ -1,6 +1,10 @@
 # childrens-museum-franklin-train-board
 
+xxx add background
 
+xxx add animation of train here
+
+xxx add recording of display
 
 
 

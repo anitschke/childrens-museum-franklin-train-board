@@ -4,6 +4,10 @@ import gc #xxx
 
 #xxx remove unused imports
 
+# xxx add a note somewhere, maybe in the README that this is a lot more
+# complicated than it needs to be. If you just want simple text update without
+# the animation or other logic I need for computing and caching go point back at
+# an earlier commit.
 
 # xxx doc The esp32-s3 comes with a co-processor for handling HTTP requests. So
 # ideally we would send out the HTTP request to get updated arrival times and
@@ -30,8 +34,8 @@ import gc #xxx
 # careful about when we send the HTTP request so that it isn't in the middle of
 # an animation or something.
 
-DEBUG=True
-
+# xxx hook something up so you can get stuff to happen by pressing the up and
+# down buttons on the board. Maybe play the train animation in either direction?
 
 #xxx add a bunch of error protection
 

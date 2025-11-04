@@ -4,6 +4,8 @@ import gc
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_matrixportal.matrix import Matrix
 
+# xxx remove this file once I get it so you can play the train on demand
+
 # xxx code for the board that all it does is play an animation from the
 # train.bmp sprite sheet of a train going by in order to try out that animation
 # to see how it looks on the board.

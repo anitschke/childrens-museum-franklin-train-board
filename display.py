@@ -56,17 +56,6 @@ class Display:
 
         assert(len(trains)== 3, "expecting three train objects to be provided to render_arrival_times")
 
-        # xxx there is an issue where after the train animation plays the screen
-        # just goes black and nothing more happens.
-        # 
-        # I happened to have the debugger attached when this happened and I can
-        # see that the logs state that it is trying to write text to the board
-        # of the next set of arrival times. So I think the issue is that
-        # set_text is trying to write to the matrix portal base's internal root
-        # group and we deleted that as part of clearing the board to show the train.
-        # 
-        # see https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/blob/25fc43dd67ae95a8e62173e90c3069502194873a/adafruit_portalbase/graphics.py#L51
-
         times = [self._format_train_time(t) for t in trains]
 
         self._matrix_portal.set_text(times[0], self._arrival_time_indices[0])

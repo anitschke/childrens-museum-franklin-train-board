@@ -13,15 +13,6 @@ class TimeConversion:
         self._nowFcn = dependencies.nowFcn
 
     # xxx doc
-    # xxx test
-    # xxx add way to configure
-    def time_is_soon(self, train_time):
-        # xxx this might become unused in the new world
-        now = self._nowFcn()
-        time_in_seconds = (train_time-now).total_seconds()
-        return time_in_seconds < 30
-
-    # xxx doc
     def relative_time_from_now(self, train_time):
 
         # When we look at times we need to make sure we remove any time zone

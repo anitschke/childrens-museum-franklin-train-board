@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# xxx doc
+
+# xxx talk about building the sprite sheet in the README.md
+
 # Generates a vertical sprite sheet where each frame is a 64x32 crop
 # of the train image shifted one pixel at a time, with animated smoke.
 
