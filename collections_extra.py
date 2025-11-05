@@ -13,7 +13,15 @@ class LimitedSizeOrderedSet:
         if element not in self._data:
             self._data[element] = None  # Value can be anything, key is what matters
             if len(self._data) > self.max_size:
-                self._data.popitem(last=False)
+                # Ideally we would just do `self._data.popitem(last=False)` here
+                # but  MicroPython / CircuitPython doesn't support the "last"
+                # keyword argument for OrderedDict so we need to work around
+                # this by getting the first element in the dict and explicitly
+                # popping that element.
+                # 
+                # See https://github.com/micropython/micropython/issues/18370
+                first_key = next(iter(self._data))
+                self._data.pop(first_key)
         else:
             self._data.move_to_end(element)
 
@@ -42,7 +50,15 @@ class LimitedSizeOrderedDict:
 
         self._data[key] = value
         if len(self._data) > self.max_size:
-            self._data.popitem(last=False)
+            # Ideally we would just do `self._data.popitem(last=False)` here
+            # but  MicroPython / CircuitPython doesn't support the "last"
+            # keyword argument for OrderedDict so we need to work around
+            # this by getting the first element in the dict and explicitly
+            # popping that element.
+            # 
+            # See https://github.com/micropython/micropython/issues/18370
+            first_key = next(iter(self._data))
+            self._data.pop(first_key)
 
     def __getitem__(self, key):
         return self._data[key]
