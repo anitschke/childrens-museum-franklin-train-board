@@ -45,6 +45,12 @@ ADAFRUIT_AIO_KEY      = "REDACTED"
 
 Run `install.sh` to install all of the 
 
+## Running tests
+
+xxx 
+
+xxx setup GH action?
+
 ## Notes
 
 ### dependency injection
@@ -91,3 +97,4 @@ xxx then reinstall
 * https://www.mbta.com/developers/v3-api
 * https://github.com/jegamboafuentes/Train_schedule_board
 * https://docs.circuitpython.org/projects/matrixportal/en/latest/
+

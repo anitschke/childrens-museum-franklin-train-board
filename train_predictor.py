@@ -1,7 +1,7 @@
 # xxx doc
 import gc
 import time
-from collections import OrderedDict
+from collections_extra import LimitedSizeOrderedSet, LimitedSizeOrderedDict
 
 #xxx read through https://www.mbta.com/developers/v3-api/best-practices#predictions to see if you are getting it right
 
@@ -62,55 +62,6 @@ from collections import OrderedDict
 # https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/blob/d5c51a1838c3aec4d5fbfafb9f09cf62c528d58b/adafruit_portalbase/__init__.py#L438
 
 DATA_SOURCE='https://api-v3.mbta.com/schedules?filter%5Bstop%5D=place-FB-0275&filter%5Broute%5D=CR-Franklin&sort=arrival_time&include=prediction'
-
-# LimitedSizeOrderedSet is a set that removes the oldest elements when we hit
-# the max length
-#
-# xxx test
-class LimitedSizeOrderedSet:
-    def __init__(self, max_size):
-        self.max_size = max_size
-        self._data = OrderedDict()
-
-    def add(self, element):
-        if element not in self._data:
-            self._data[element] = None  # Value can be anything, key is what matters
-            if len(self._data) > self.max_size:
-                self._data.popitem(last=False)
-
-    def __contains__(self, element):
-        return element in self._data
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
-    
-# xxx doc
-# 
-# xxx test
-class LimitedSizeOrderedDict:
-    def __init__(self, max_size):
-        self.max_size = max_size
-        self._data = OrderedDict()
-
-    def __setitem__(self, key, value):
-        self._data[key] = value  # Value can be anything, key is what matters
-        if len(self._data) > self.max_size:
-            self._data.popitem(last=False)
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __contains__(self, key):
-        return key in self._data
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
 
 
 # xxx doc
