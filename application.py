@@ -1,6 +1,9 @@
 import time
 import supervisor
 import gc #xxx
+import board
+from digitalio import DigitalInOut, Pull
+from adafruit_debouncer import Debouncer
 
 #xxx remove unused imports
 
@@ -40,6 +43,13 @@ import gc #xxx
 #xxx add a bunch of error protection
 
 NUM_TRAINS_TO_FETCH=3
+
+pin_down = DigitalInOut(board.BUTTON_DOWN)
+pin_down.switch_to_input(pull=Pull.UP)
+button_down = Debouncer(pin_down)
+pin_up = DigitalInOut(board.BUTTON_UP)
+pin_up.switch_to_input(pull=Pull.UP)
+button_up = Debouncer(pin_up)
 
 class ApplicationDependencies:
     def __init__(self, matrix_portal, train_predictor, time_conversion, display, nowFcn, logger):
@@ -140,6 +150,15 @@ class Application:
             
     def _run_loop(self):
         while True:
+            # xxx doc first handle any user input via buttons
+            # xxx button presses don't seem to be working
+            button_down.update()
+            button_up.update()
+            if button_down.fell or button_up.fell:
+                self._try_method(self._display.render_train, [train_warning.direction])
+                continue
+
+            # xxx doc then move on to regular things
             self._nightly_tasks()
             self._try_method(self._fetch_next_trains)
             train_warning = self._try_method(self._train_predictor.train_passing_warning, [self._trains[0]])
