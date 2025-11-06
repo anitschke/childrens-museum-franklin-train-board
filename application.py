@@ -151,12 +151,19 @@ class Application:
     def _run_loop(self):
         while True:
             # xxx doc first handle any user input via buttons
-            # xxx button presses don't seem to be working
+
+            # xxx button presses don't seem to be working. It looks like the
+            # issue is I am not calling button.update() frequently enough. If I
+            # stick it in a tight loop then it works. I guess I need to look
+            # into the debouncer code to see if there is a workaround for this.
+            # 
+            # I think the only way around this might be to avoid using debouncer
+            # and just check to see if the button is currently up/down?
             button_down.update()
             button_up.update()
             if button_down.fell or button_up.fell:
-                self._try_method(self._display.render_train, [train_warning.direction])
-                continue
+                self._try_method(self._display.render_train, [1])
+            
 
             # xxx doc then move on to regular things
             self._nightly_tasks()
