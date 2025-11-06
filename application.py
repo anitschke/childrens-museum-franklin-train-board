@@ -123,7 +123,16 @@ class Application:
         self._matrix_portal.network.get_local_time(location="America/New_York")
 
     def _fetch_next_trains(self):
-        if self._last_train_check is None or time.monotonic() > self._last_train_check + 180: #xxx check more frequently
+        # We generally want to make requests to update the train arrival times
+        # fairly frequently as when the train is getting close to the Children's
+        # Museum of Franklin we want to make sure we have an accurate estimate
+        # of arrival time to show the train animation at the correct time. We do
+        # still want to make sure we aren't spamming the MBTA API too much. So
+        # we will do our own rate limiting of no more than one request every
+        # five seconds. When you use a free API key the MBTA API has a rate
+        # limit of 1000 requests a minute. So a request every 5 seconds
+        # shouldn't give us any issues.
+        if self._last_train_check is None or time.monotonic() > self._last_train_check + 5:
             self._logger.debug("fetching trains")
             self._trains = self._try_method(self._train_predictor.next_trains, [NUM_TRAINS_TO_FETCH])
             self._last_train_check  = time.monotonic()
@@ -131,9 +140,15 @@ class Application:
             
     def _run_loop(self):
         while True:
+            self._nightly_tasks()
             self._try_method(self._fetch_next_trains)
             train_warning = self._try_method(self._train_predictor.train_passing_warning, [self._trains[0]])
             if train_warning is not None:
+                # If we know is a train is approaching and we are showing the
+                # train animation warning we want to keep playing that warning
+                # until the train finishes going by. No need to make a call out
+                # to the MBTA to update train predictions until the train
+                # finishes going by.
                 while not train_warning.shouldStop():
                     self._try_method(self._display.render_train, [train_warning.direction])
                 self._try_method(self._train_predictor.mark_train_arrived, [self._trains[0]])
