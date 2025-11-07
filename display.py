@@ -3,12 +3,6 @@ import displayio
 import gc
 from train_predictor import Direction
 
-# xxx add a splash screen that displays at startup. Display name of board. and
-# version.
-#
-# might be difficult due to the way I am initialling board. I'll have to make
-# sure I make it so it only shows the splash screen before we to init.
-
 ARRIVAL_TIMES_FONT='fonts/6x10.bdf'
 ERROR_FONT='fonts/4x6.bdf'
 

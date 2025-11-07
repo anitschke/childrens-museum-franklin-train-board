@@ -1,4 +1,3 @@
-import time
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_datetime import datetime,timedelta
 

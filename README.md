@@ -8,6 +8,8 @@ xxx add recording of display
 
 xxx link to https://github.com/anitschke/childrens-museum-franklin-train-board-data-analysis
 
+xxx you can press button to trigger train to go by. You must press and hold button until the train starts passing by.
+
 ## Maxtrix Portal Setup
 
 ### Flash with CircuitPython
