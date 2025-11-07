@@ -3,7 +3,8 @@ import supervisor
 import gc #xxx
 import board
 from digitalio import DigitalInOut, Pull
-from adafruit_debouncer import Debouncer
+from train_predictor import Direction
+
 
 #xxx remove unused imports
 
@@ -44,12 +45,28 @@ from adafruit_debouncer import Debouncer
 
 NUM_TRAINS_TO_FETCH=3
 
-pin_down = DigitalInOut(board.BUTTON_DOWN)
-pin_down.switch_to_input(pull=Pull.UP)
-button_down = Debouncer(pin_down)
-pin_up = DigitalInOut(board.BUTTON_UP)
-pin_up.switch_to_input(pull=Pull.UP)
-button_up = Debouncer(pin_up)
+# Configure buttons to pull up. This means that by default they will have a
+# value of True and when pressed will get a value of False. I tried configuring
+# them the other way around so we get a value of true when pressed but they must
+# be normally closed or something, because it didn't work, I don't really
+# understand.
+# 
+# To work around this we will just setup a lambda that tells us if it is
+# currently depressed.
+# 
+# Ideally we would use hardware interrupts or something to keep track of if it
+# has been pressed but it seems like that isn't possible. It seems like the
+# right way to do this would be to use async to allow monitoring the button
+# while we are still scrolling the text. But this adds a lot of complexity to
+# the code. So we will just make it so you need to be holding down the button
+# when we happen to check.e
+button_down = DigitalInOut(board.BUTTON_DOWN)
+button_down.switch_to_input(pull=Pull.UP)
+button_down_depressed = lambda : not button_down.value
+button_up = DigitalInOut(board.BUTTON_UP)
+button_up.switch_to_input(pull=Pull.UP)
+button_up_depressed = lambda : not button_up.value
+
 
 class ApplicationDependencies:
     def __init__(self, matrix_portal, train_predictor, time_conversion, display, nowFcn, logger):
@@ -150,22 +167,22 @@ class Application:
             
     def _run_loop(self):
         while True:
-            # xxx doc first handle any user input via buttons
-
-            # xxx button presses don't seem to be working. It looks like the
-            # issue is I am not calling button.update() frequently enough. If I
-            # stick it in a tight loop then it works. I guess I need to look
-            # into the debouncer code to see if there is a workaround for this.
+            # First look for user input from buttons.
             # 
-            # I think the only way around this might be to avoid using debouncer
-            # and just check to see if the button is currently up/down?
-            button_down.update()
-            button_up.update()
-            if button_down.fell or button_up.fell:
-                self._try_method(self._display.render_train, [1])
+            # Note ideally we would use something like hardware interrupts or
+            # asyncio to monitor button presses but this adds a lot of
+            # complexity to the code so instead we will just check the current
+            # state of the button at this point in time. This means that you
+            # must be pressing the button when we check for the button press or
+            # else the press won't be registered.
+            if button_up_depressed():
+                self._try_method(self._display.render_train, [Direction.IN_BOUND])
+                continue
+            if button_down_depressed():
+                self._try_method(self._display.render_train, [Direction.OUT_BOUND])
+                continue              
             
-
-            # xxx doc then move on to regular things
+            # Now move on to regular looping behavior.
             self._nightly_tasks()
             self._try_method(self._fetch_next_trains)
             train_warning = self._try_method(self._train_predictor.train_passing_warning, [self._trains[0]])
