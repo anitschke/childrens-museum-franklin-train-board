@@ -94,7 +94,7 @@ class Application:
             return
         
         now = self._nowFcn()
-        if now.hour is not 9:
+        if now.hour is not 3:
             return
 
         self._logger.debug("running nightly tasks")
