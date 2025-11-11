@@ -27,7 +27,7 @@ train_predictor = TrainPredictor(TrainPredictorDependencies(matrix_portal.networ
     outboundOffsetAverageSeconds=93, outboundOffsetStdDevSeconds=9)
 
 time_conversion = TimeConversion(TimeConversionDependencies(datetime.now))
-display = Display(DisplayDependencies(matrix_portal, time_conversion, logger), text_scroll_delay=0.1, train_frame_duration=0.1)
+display = Display(DisplayDependencies(matrix_portal, time_conversion, logger), text_scroll_delay=0.1, train_frame_duration=0.08)
 
 app = Application(ApplicationDependencies(matrix_portal, train_predictor, time_conversion, display, datetime.now, logger))
 
