@@ -33,38 +33,50 @@ class Display:
         self._title_text_index = None
         self._arrival_time_indices = None
 
+        self._error_text_index = None
+
     def initialize(self):
         # xxx doc important we init train after arrival times so it shows up on top
         self._initialize_arrival_times()
+        self._initialize_error()
         self._initialize_train()
         gc.collect()
 
     def _set_mode(self, mode):
         if mode == DisplayMode.ARRIVAL_TIMES:
             self._tLogo.hidden = False
-            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = False
-            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = False
-            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = False
-            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = False
+            self._set_text_hidden(self._title_text_index, False)
+            self._set_text_hidden(self._arrival_time_indices[0], False)
+            self._set_text_hidden(self._arrival_time_indices[1], False)
+            self._set_text_hidden(self._arrival_time_indices[2], False)
+
+            self._set_text_hidden(self._error_text_index, True)
 
             self._train_sprite_group.hidden = True
         if mode == DisplayMode.TRAIN:
             self._tLogo.hidden = True
-            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = True
+            self._set_text_hidden(self._title_text_index, True)
+            self._set_text_hidden(self._arrival_time_indices[0], True)
+            self._set_text_hidden(self._arrival_time_indices[1], True)
+            self._set_text_hidden(self._arrival_time_indices[2], True)
+
+            self._set_text_hidden(self._error_text_index, True)
 
             self._train_sprite_group.hidden = False
         if mode == DisplayMode.ERROR:
             self._tLogo.hidden = True
-            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = True
-            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = True
+            self._set_text_hidden(self._title_text_index, True)
+            self._set_text_hidden(self._arrival_time_indices[0], True)
+            self._set_text_hidden(self._arrival_time_indices[1], True)
+            self._set_text_hidden(self._arrival_time_indices[2], True)
+
+            self._set_text_hidden(self._error_text_index, False)
 
             self._train_sprite_group.hidden = True
         self._mode = mode
+
+    def _set_text_hidden(self, text_index:int, hidden:bool):
+        self._matrix_portal.text_fields[text_index].get("label").hidden = hidden
 
     def render_arrival_times(self, trains):
         self._logger.debug("rendering arrival times")
@@ -119,6 +131,9 @@ class Display:
         self._mode = DisplayMode.ARRIVAL_TIMES
         gc.collect()
 
+    def _initialize_error(self):
+        self._error_text_index  = self._matrix_portal.add_text(text_font=ERROR_FONT, text_position=(1, 15), text_wrap=17, text="ERROR Restarting in 1min. Contact Andrew.B.Nitschke@gmail.com")
+
     def scroll_text(self):
         self._matrix_portal.scroll_text(self._text_scroll_delay)
     
@@ -164,5 +179,3 @@ class Display:
 
     def render_error(self):
         self._set_mode(DisplayMode.ERROR)
-        self._matrix_portal.remove_all_text()
-        self._matrix_portal.add_text(text_font=ERROR_FONT, text_position=(1, 15), text_wrap=17, text="ERROR Restarting in 1min. Contact Andrew.B.Nitschke@gmail.com")
