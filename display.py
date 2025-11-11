@@ -30,6 +30,7 @@ class Display:
         self._text_scroll_delay = text_scroll_delay
         self._train_frame_duration = train_frame_duration
         
+        self._title_text_index = None
         self._arrival_time_indices = None
 
     def initialize(self):
@@ -41,12 +42,27 @@ class Display:
     def _set_mode(self, mode):
         if mode == DisplayMode.ARRIVAL_TIMES:
             self._tLogo.hidden = False
+            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = False
+            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = False
+            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = False
+            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = False
+
             self._train_sprite_group.hidden = True
         if mode == DisplayMode.TRAIN:
             self._tLogo.hidden = True
+            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = True
+
             self._train_sprite_group.hidden = False
         if mode == DisplayMode.ERROR:
             self._tLogo.hidden = True
+            self._matrix_portal.text_fields[self._title_text_index].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[0]].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[1]].get("label").hidden = True
+            self._matrix_portal.text_fields[self._arrival_time_indices[2]].get("label").hidden = True
+
             self._train_sprite_group.hidden = True
         self._mode = mode
 
@@ -64,24 +80,19 @@ class Display:
 
     def _format_train_time(self, train):
         if train is None:
-            return ""
-            # xxx xxx xxx xxx xxx OK, I think I see what the issue is. In
-            # adafruit_portalbase it looks like setting some text equal to None
-            # can in some cases result in setting the label to None effectively
-            # deleting it.
-            # 
-            # Then when we try to go back in and set it again it ends up
-            # re-creating the label, causing issues because we need a well
-            # defined layering and the new label ends up being on top of the one
-            # we are drawing.
-            # 
-            # https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/blob/25fc43dd67ae95a8e62173e90c3069502194873a/adafruit_portalbase/__init__.py#L285
-            # https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/blob/25fc43dd67ae95a8e62173e90c3069502194873a/adafruit_portalbase/__init__.py#L312
+            # When we have no train we need to return a space character and NOT
+            # an empty string. This is to "trick" matrix_portal.set_text into
+            # keeping the text label around. Without this trick set_text will
+            # remove the label and add it back next time we render which can
+            # result in the label showing up incorrectly on top of other
+            # elements. See
+            # https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/issues/117
+            return " "
         return self._time_conversion.relative_time_from_now(train.time)
 
     def _initialize_arrival_times(self):
         self._logger.debug("initializing arrival times")
-        self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(15, 3), text="Children's Museum of Franklin", is_data=False, scrolling=True)
+        self._title_text_index = self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(15, 3), text="Children's Museum of Franklin", is_data=False, scrolling=True)
         
         self._arrival_time_indices = [
             self._matrix_portal.add_text( text_font=ARRIVAL_TIMES_FONT, text_position=(16, 11), text="?min", is_data=False),
