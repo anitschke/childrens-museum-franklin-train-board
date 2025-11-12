@@ -118,12 +118,13 @@ class TrainWarning:
         return time.monotonic() > self._end_monotonic
 
 class TrainPredictorDependencies:
-    def __init__(self, network, datetime, timedelta, nowFcn, mbta_api_key):
+    def __init__(self, network, datetime, timedelta, nowFcn, mbta_api_key, logger):
         self.network = network 
         self.datetime = datetime 
         self.timedelta = timedelta
         self.nowFcn = nowFcn
         self.mbta_api_key = mbta_api_key
+        self.logger = logger
 
 class TrainPredictor:
     def __init__(self, dependencies: TrainPredictorDependencies, filterResultsAfterSeconds = 30, trainWarningSeconds = 0, inboundOffsetAverageSeconds=0, inboundOffsetStdDevSeconds=0, outboundOffsetAverageSeconds=0, outboundOffsetStdDevSeconds=0):
@@ -131,6 +132,7 @@ class TrainPredictor:
         self._datetime = dependencies.datetime
         self._timedelta = dependencies.timedelta
         self._nowFcn = dependencies.nowFcn
+        self._logger = dependencies.logger
 
         self._filterResultsAfterSeconds = filterResultsAfterSeconds
         self._trainWarningOffset = self._timedelta(seconds=trainWarningSeconds)
@@ -208,13 +210,17 @@ class TrainPredictor:
     
     # xxx test
     def _compute_train(self, schedule_id, schedule, prediction):
+        self._logger.debug(f"computing train arrival time for '{schedule_id}' schedule={schedule}, prediction={prediction}")
+
         # If we know the train has already arrived then ignore it
         if schedule_id in self._arrived_trains:
+            self._logger.debug(f"Filtering '{schedule_id}' since it is marked as having arrived already")
             return None
 
         direction = schedule.get("direction_id")
         cmf_arrival_time, time_is_from_prediction = self._get_estimated_cmf_arrival_time(schedule, prediction, direction)
         if cmf_arrival_time is None:
+            self._logger.debug(f"Filtering '{schedule_id}' since no predicted arrival time could be computed")
             return None
         
         # Remove any times more than self._filterResultsAfterSeconds (by default
@@ -225,6 +231,7 @@ class TrainPredictor:
         # first starts up.
         now = self._nowFcn()
         if (cmf_arrival_time - now).total_seconds() < (-1 * self._filterResultsAfterSeconds):
+            self._logger.debug(f"Filtering '{schedule_id}' since predicted arrival time ({cmf_arrival_time}) is in the past (now = {now})")
             return None
 
         std_dev = self._inboundOffsetStdDev if direction == Direction.IN_BOUND else self._outboundOffsetStdDev

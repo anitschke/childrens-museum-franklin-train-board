@@ -4,7 +4,7 @@ import board
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from adafruit_datetime import datetime,timedelta
 
-import logging
+import logging_extra
 from train_predictor import TrainPredictor, TrainPredictorDependencies
 from time_conversion import TimeConversion, TimeConversionDependencies
 from display import Display, DisplayDependencies
@@ -12,8 +12,8 @@ from application import Application, ApplicationDependencies
 
 matrix_portal = MatrixPortal(status_neopixel=board.NEOPIXEL)
 
-log_levels = logging.LogLevels(aio_handler=logging.INFO, print_handler=logging.DEBUG)
-logger = logging.newLogger(logging.LoggerDependencies(matrix_portal), log_levels)
+log_levels = logging_extra.LogLevels(aio_handler=logging_extra.INFO, print_handler=logging_extra.DEBUG)
+logger = logging_extra.newLogger(logging_extra.LoggerDependencies(matrix_portal), log_levels)
 
 mbta_api_key = os.getenv("MBTA_API_KEY")
 if mbta_api_key is None:
@@ -21,7 +21,7 @@ if mbta_api_key is None:
     raise KeyError("missing MBTA API key")
 
 # xxx doc where these numbers come from
-train_predictor = TrainPredictor(TrainPredictorDependencies(matrix_portal.network, datetime, timedelta, datetime.now, mbta_api_key), 
+train_predictor = TrainPredictor(TrainPredictorDependencies(matrix_portal.network, datetime, timedelta, datetime.now, mbta_api_key, logger), 
     trainWarningSeconds=60,
     inboundOffsetAverageSeconds=-63, inboundOffsetStdDevSeconds=9,
     outboundOffsetAverageSeconds=93, outboundOffsetStdDevSeconds=9)

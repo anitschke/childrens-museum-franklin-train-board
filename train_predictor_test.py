@@ -4,7 +4,9 @@ import json
 import os
 import unittest
 import urllib.request
+import logging
 
+mock_logger = logging.getLogger("mock")
 
 def mock_now_func(timeOfNow):
     return lambda : datetime.fromisoformat(timeOfNow).replace(tzinfo=None)
@@ -62,7 +64,7 @@ class Test_next_trains(unittest.TestCase):
         now = datetime.now()
         mock_now = lambda : now.replace(tzinfo=None, hour=1)
 
-        deps = TrainPredictorDependencies(MockNetwork(), datetime, timedelta, mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(MockNetwork(), datetime, timedelta, mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
         results = train_predictor.next_trains(count=1)
 
@@ -87,7 +89,7 @@ class Test_fetch_schedules_and_predictions(unittest.TestCase):
         # We will use Test_next_trains to connect together testing for
         # _fetch_schedules_and_predictions and _analyze_data to make sure we can
         # actually analyze data that is currently coming out of the API.
-        deps = TrainPredictorDependencies(MockNetwork(), datetime=None, timedelta=timedelta, nowFcn=None, mbta_api_key=None)
+        deps = TrainPredictorDependencies(MockNetwork(), datetime=None, timedelta=timedelta, nowFcn=None, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
         train_predictor._fetch_schedules_and_predictions()
         
@@ -97,7 +99,7 @@ class Test_fetch_schedules_and_predictions(unittest.TestCase):
         # response that would be interpreted by the rest of the code as there
         # being no trains coming. This resulted in the board being blank.
         # Instead we should throw an error in this case.
-        deps = TrainPredictorDependencies(MockNetwork(), datetime=None, timedelta=timedelta, nowFcn=None, mbta_api_key="this_is_a_bad_API_key")
+        deps = TrainPredictorDependencies(MockNetwork(), datetime=None, timedelta=timedelta, nowFcn=None, mbta_api_key="this_is_a_bad_API_key", logger=mock_logger)
         train_predictor = TrainPredictor(deps)
         with self.assertRaisesRegex(RuntimeError, "Failed to fetch data from MBTA API. status_code: 403 response:"):
             train_predictor._fetch_schedules_and_predictions()
@@ -111,7 +113,7 @@ class Test_analyze_data(unittest.TestCase):
         # Franklin station we will base our prediction for outbound trains on
         # the departure prediction time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, outboundOffsetStdDevSeconds=4321)
 
         data = load_test_schedule_json('simple_outbound.json')
@@ -132,7 +134,7 @@ class Test_analyze_data(unittest.TestCase):
         # Franklin station we will base our prediction for inbound trains on
         # the arrival prediction time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, inboundOffsetStdDevSeconds=1234)
 
         data = load_test_schedule_json('simple_inbound.json')
@@ -155,7 +157,7 @@ class Test_analyze_data(unittest.TestCase):
         #
         # The average offset should be added to the estimated arrival time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, outboundOffsetAverageSeconds=10)
 
         data = load_test_schedule_json('simple_outbound.json')
@@ -176,7 +178,7 @@ class Test_analyze_data(unittest.TestCase):
         #
         # The average offset should be added to the estimated arrival time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, inboundOffsetAverageSeconds=10)
 
         data = load_test_schedule_json('simple_inbound.json')
@@ -197,7 +199,7 @@ class Test_analyze_data(unittest.TestCase):
         #
         # The average offset should be added to the estimated arrival time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, outboundOffsetAverageSeconds=-10)
 
         data = load_test_schedule_json('simple_outbound.json')
@@ -218,7 +220,7 @@ class Test_analyze_data(unittest.TestCase):
         #
         # The average offset should be added to the estimated arrival time.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps, inboundOffsetAverageSeconds=-10)
 
         data = load_test_schedule_json('simple_inbound.json')
@@ -235,7 +237,7 @@ class Test_analyze_data(unittest.TestCase):
         # amount of data that I think we can get away with requesting at the
         # moment.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_sparse.json')
@@ -250,7 +252,7 @@ class Test_analyze_data(unittest.TestCase):
         # When there is no prediction data in the JSON from the MBTA we should
         # fallback to using the schedule time
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_no_prediction_outbound.json')
@@ -265,7 +267,7 @@ class Test_analyze_data(unittest.TestCase):
         # When there is no prediction data in the JSON from the MBTA we should
         # fallback to using the schedule time
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_no_prediction_inbound.json')
@@ -287,7 +289,7 @@ class Test_analyze_data(unittest.TestCase):
         # However if the departure time is null for the prediction we should
         # fall back to using the arrival time of the prediction.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_no_departure_outbound.json')
@@ -310,7 +312,7 @@ class Test_analyze_data(unittest.TestCase):
         # However if the arrival time is null for the prediction we should fall
         # back to using the departure time of the prediction.
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('simple_no_arrival_inbound.json')
@@ -326,7 +328,7 @@ class Test_analyze_data(unittest.TestCase):
         # There are multiple possible results that could be returned but only
         # one is requested
         mock_now = mock_now_func('2025-10-22T04:06:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('multiple_results.json')
@@ -341,7 +343,7 @@ class Test_analyze_data(unittest.TestCase):
         # There are two possible results that could be returned but three are
         # requested
         mock_now = mock_now_func('2025-10-22T04:06:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('multiple_results.json')
@@ -359,7 +361,7 @@ class Test_analyze_data(unittest.TestCase):
         # There are multiple possible results that could be returned but only
         # one is requested
         mock_now = mock_now_func('2025-10-22T05:06:20-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(None, datetime, mock_now, filterResultsAfterSeconds=10)
 
         data = load_test_schedule_json('multiple_results.json')
@@ -375,7 +377,7 @@ class Test_analyze_data(unittest.TestCase):
 
     def test_data_array_empty(self):
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('data_array_empty.json')
@@ -387,7 +389,7 @@ class Test_analyze_data(unittest.TestCase):
 
     def test_no_data_property(self):
         mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
-        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None)
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
 
         data = load_test_schedule_json('no_data_property.json')
