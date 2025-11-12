@@ -6,6 +6,7 @@ sd/
 .Trashes
 boot_out.txt
 __pycache__
+tty.log
 
 # settings.toml contains secrets and so should not be checked in
 settings.toml

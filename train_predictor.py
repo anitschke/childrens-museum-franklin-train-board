@@ -263,10 +263,14 @@ class TrainPredictor:
         # 
         # xxx test
         if time_is_from_prediction:
+            self._logger.debug(f"Inserting prediction for '{schedule_id}' into cache")
             self._train_prediction_cache[schedule_id] = train
         elif schedule_id in self._train_prediction_cache:
-            return self._train_prediction_cache[schedule_id]
+            cached_train = self._train_prediction_cache[schedule_id]
+            self._logger.debug(f"Using existing cached prediction for '{schedule_id}' {cached_train}")
+            return cached_train
 
+        self._logger.debug(f"Computed train for '{schedule_id}' {train}")
         return train
 
     # xxx test
