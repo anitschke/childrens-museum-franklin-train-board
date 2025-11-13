@@ -25,6 +25,9 @@ class LimitedSizeOrderedSet:
         else:
             self._data.move_to_end(element)
 
+    def clear(self):
+        self._data.clear()
+
     def __contains__(self, element):
         return element in self._data
 
@@ -39,6 +42,9 @@ class LimitedSizeOrderedDict:
     def __init__(self, max_size):
         self.max_size = max_size
         self._data = OrderedDict()
+
+    def clear(self):
+        self._data.clear()
 
     def __setitem__(self, key, value):
         # if the item is already in the OrderedDict then delete it so when we

@@ -3,6 +3,7 @@ import supervisor
 import board
 from digitalio import DigitalInOut, Pull
 from train_predictor import Direction
+import gc
 
 # xxx doc add a note somewhere, maybe in the README that this is a lot more
 # complicated than it needs to be. If you just want simple text update without
@@ -101,6 +102,8 @@ class Application:
         self._last_nightly_tasks_run = time.monotonic()
         self._try_method(self._sync_clock)
         self._try_method(self._add_watchdog_log)
+        self._train_predictor.clear_cache()
+        gc.collect()
 
     def _add_watchdog_log(self):
         # xxx doc have a watchdog setup on adafruit IO to allert me if we stop getting logs, This make sure we always have some logs.

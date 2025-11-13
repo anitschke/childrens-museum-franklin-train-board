@@ -2,7 +2,7 @@
   "data": [
     {
       "attributes": {
-        "arrival_time": "2025-10-22T23:06:00-04:00",
+        "arrival_time": "2025-10-22T23:06:02-04:00",
         "departure_time": "2025-10-22T23:06:00-04:00",
         "direction_id": 1,
         "drop_off_type": 0,

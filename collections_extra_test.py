@@ -3,11 +3,27 @@ import unittest
 
 
 class Test_LimitedSizeOrderedSet(unittest.TestCase):
-    def test_add_element(self):
+    def test_basic_functionality(self):
         set = LimitedSizeOrderedSet(max_size=100)
+        self.assertEqual(len(set), 0)
         self.assertFalse("foo" in set)
+
         set.add("foo")
         self.assertTrue("foo" in set)
+        self.assertEqual(len(set), 1)
+
+        set.add("bar")
+        self.assertTrue("foo" in set)
+        self.assertTrue("bar" in set)
+        self.assertEqual(len(set), 2)
+
+        set.add("bar")
+        self.assertTrue("foo" in set)
+        self.assertTrue("bar" in set)
+        self.assertEqual(len(set), 2)
+
+        set.clear()
+        self.assertEqual(len(set), 0)
 
     def test_hit_max_size(self):
         # When we hit the max size the oldest elements in the set should be removed
@@ -62,12 +78,28 @@ class Test_LimitedSizeOrderedSet(unittest.TestCase):
         self.assertTrue(4 in set)
 
 class Test_LimitedSizeOrderedDict(unittest.TestCase):
-    def test_add_element(self):
+    def test_basic_functionality(self):
         limitedDict = LimitedSizeOrderedDict(max_size=100)
+        self.assertEqual(len(limitedDict), 0)
         self.assertFalse("foo" in limitedDict)
-        limitedDict["foo"] = "bar"
+
+        limitedDict["foo"] = "foo"
         self.assertTrue("foo" in limitedDict)
-        self.assertEqual(limitedDict["foo"], "bar")
+        self.assertEqual(limitedDict["foo"], "foo")
+        self.assertEqual(len(limitedDict), 1)
+
+        limitedDict["bar"] = "bar"
+        self.assertTrue("bar" in limitedDict)
+        self.assertEqual(limitedDict["bar"], "bar")
+        self.assertEqual(len(limitedDict), 2)
+
+        limitedDict["bar"] = "bar"
+        self.assertTrue("bar" in limitedDict)
+        self.assertEqual(limitedDict["bar"], "bar")
+        self.assertEqual(len(limitedDict), 2)
+
+        limitedDict.clear()
+        self.assertEqual(len(limitedDict), 0)
 
     def test_hit_max_size(self):
         # When we hit the max size the oldest elements in the set should be removed

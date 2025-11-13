@@ -90,6 +90,7 @@ def direction_str(direction):
 
 # xxx doc
 # xxx doc std_dev
+# xxx doc warning that ID is NOT globally unique, AFAIK it is only unique for a given day. it IS reused for different days. Point to TrainPredictor.clear_cache for details
 class TrainArrival:
     def __init__(self, schedule_id, time, direction, std_dev):
         self.schedule_id = schedule_id
@@ -146,8 +147,6 @@ class TrainPredictor:
 
         # xxx doc uses schedule ID as key and has train as value.
         # Needed to make sure we don't get arrival time messed up when prediction goes away
-        # 
-        # xxx test
         self._train_prediction_cache = LimitedSizeOrderedDict(10)
 
         self._mbta_api_headers = {
@@ -166,7 +165,8 @@ class TrainPredictor:
         # the response as JSON and then parse it. see
         # https://github.com/adafruit/Adafruit_CircuitPython_PortalBase/blob/d5c51a1838c3aec4d5fbfafb9f09cf62c528d58b/adafruit_portalbase/network.py#L104
         if self._network is not None:
-            self._network.add_json_content_type("application/vnd.api+json")
+            # xxx is this really still needed?
+            self._network.add_json_content_type("application/vnd.api+json") 
 
     # xxx doc
     def next_trains(self, count):
@@ -193,10 +193,25 @@ class TrainPredictor:
         return TrainWarning(end_monatomic, train.direction)
     
     # xxx doc
-    # xxx test
     def mark_train_arrived(self, train):
         self._logger.debug(f"marking '{train.schedule_id}' as arrived")
         self._arrived_trains.add(train.schedule_id)
+
+    # xxx doc We use the MBTA schedule ID for a train arrival ID for simplicity.
+    # But it seems that the MBTA does not make any guarantee about this ID being
+    # globally unique. Best I can tell it is only unique for a given day. It can
+    # and does get reused from day to day. For example on both 2025-11-12 and
+    # 2025-11-13 the 2025-11-12T05:06:00-05:00 inbound train had the ID
+    # "schedule-ReadRailJobConnectionsUpdate-778601-704-FB-0275-S-10". So as
+    # part of the applications nightly tasks it should clear the train
+    # predictor's cache to avoid the ID collision that we know exists. Without
+    # calling clear_cache _arrived_trains will contain the schedule id from the
+    # previous day and incorrectly cause the train predictor to think that the
+    # train has already arrived and not show it on the board.
+    def clear_cache(self):
+        self._arrived_trains.clear()
+        self._train_prediction_cache.clear()
+
 
     def _fetch_schedules_and_predictions(self):
         # When doing data analysis I ran into a few cases where the request to
@@ -260,8 +275,6 @@ class TrainPredictor:
         # Then later if we see that the train arrival data is no logger from a
         # prediction we will used the cached copy from the prediction if we have
         # it.
-        # 
-        # xxx test
         if time_is_from_prediction:
             self._logger.debug(f"Inserting prediction for '{schedule_id}' into cache")
             self._train_prediction_cache[schedule_id] = train
@@ -273,7 +286,6 @@ class TrainPredictor:
         self._logger.debug(f"Computed train for '{schedule_id}' {train}")
         return train
 
-    # xxx test
     # xxx doc
     def _get_estimated_cmf_arrival_time(self, schedule, prediction, direction):
         # Prefer using prediction data if possible

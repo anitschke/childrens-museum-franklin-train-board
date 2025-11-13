@@ -399,6 +399,68 @@ class Test_analyze_data(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], None)
 
+    def test_mark_train_arrived(self):
+        # If a train is already marked as arrived because the application has
+        # already played the train animation for that train then the train
+        # predictor should not return that train as an option from _analyze_data. 
+        mock_now = mock_now_func('2025-10-22T04:06:00-04:00')
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
+        train_predictor = TrainPredictor(deps, outboundOffsetStdDevSeconds=4321)
+
+        data = load_test_schedule_json('multiple_results.json')
+        
+        count = 1
+        result = train_predictor._analyze_data(count, data)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].schedule_id, "schedule-Sept8Read-768347-704-FB-0275-S-10")
+
+        train_predictor.mark_train_arrived(result[0])
+
+        result = train_predictor._analyze_data(count, data)
+        self.assertEqual(len(result), 1)
+        self.assertNotEqual(result[0].schedule_id, "schedule-Sept8Read-768347-704-FB-0275-S-10")
+        self.assertEqual(result[0].schedule_id, "schedule-Sept8Read-768333-710-FB-0275-S-10")
+
+        # Since IDs are only unique for a day the train predictor needs to have
+        # it's cache of arrived trains cleared every night to avoid incorrectly
+        # including a train that had the same ID as on a previous day.
+        train_predictor.clear_cache()
+        result = train_predictor._analyze_data(count, data)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].schedule_id, "schedule-Sept8Read-768347-704-FB-0275-S-10")
+
+    def test_cache_prediction(self):
+        # We cache predictions because as soon as the train leaves the station
+        # the prediction is removed from the MBTA API response and we want to
+        # make sure we still use the prediction time and not the schedule time.
+        mock_now = mock_now_func('2025-10-22T23:04:00-04:00')
+        deps = TrainPredictorDependencies(network=None, datetime=datetime, timedelta=timedelta, nowFcn=mock_now, mbta_api_key=None, logger=mock_logger)
+        train_predictor = TrainPredictor(deps, inboundOffsetStdDevSeconds=1234)
+
+        schedule_id = "schedule-Sept8Read-768162-787-FB-0275-S-130"
+        data_with_prediction = load_test_schedule_json('simple_inbound.json')
+        data_no_prediction = load_test_schedule_json('simple_no_prediction_inbound.json')
+        
+        # First the train is far away and we have no prediction
+        count = 1
+        result = train_predictor._analyze_data(count, data_no_prediction)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].schedule_id, schedule_id)
+        self.assertEqual(result[0].time.isoformat(), "2025-10-22T23:06:00")
+
+        # Then the train gets close by and we get a prediction from the MBTA API
+        result = train_predictor._analyze_data(count, data_with_prediction)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].schedule_id, schedule_id)
+        self.assertEqual(result[0].time.isoformat(), "2025-10-22T23:04:53")
+
+        # Then the train departs the station and the prediction is removed from
+        # the MBTA API response. We should use the last predicted time that we
+        # cached and not the schedule time.
+        result = train_predictor._analyze_data(count, data_no_prediction)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].schedule_id, schedule_id)
+        self.assertEqual(result[0].time.isoformat(), "2025-10-22T23:04:53")
 
 
 if __name__ == '__main__':
