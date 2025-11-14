@@ -83,9 +83,9 @@ class Direction:
 
 def direction_str(direction):
     if direction == Direction.OUT_BOUND:
-        return "OUT_BOUND"
+        return "OUT"
     if direction == Direction.IN_BOUND:
-        return "IN_BOUND"
+        return "IN"
     return "UNKNOWN"
 
 # xxx doc
@@ -223,17 +223,17 @@ class TrainPredictor:
         return response.json()
     
     def _compute_train(self, schedule_id, schedule, prediction):
-        self._logger.debug(f"computing train arrival time for '{schedule_id}' schedule={schedule}, prediction={prediction}")
+        self._logger.debug(f"Computing '{schedule_id}'")
 
         # If we know the train has already arrived then ignore it
         if schedule_id in self._arrived_trains:
-            self._logger.debug(f"Filtering '{schedule_id}' since it is marked as having arrived already")
+            self._logger.debug(f"Filtering '{schedule_id}'. marked as arrived")
             return None
 
         direction = schedule.get("direction_id")
         cmf_arrival_time, time_is_from_prediction = self._get_estimated_cmf_arrival_time(schedule, prediction, direction)
         if cmf_arrival_time is None:
-            self._logger.debug(f"Filtering '{schedule_id}' since no predicted arrival time could be computed")
+            self._logger.debug(f"Filtering '{schedule_id}'. arrival not computed")
             return None
         
         # Remove any times more than self._filterResultsAfterSeconds (by default
@@ -244,7 +244,7 @@ class TrainPredictor:
         # first starts up.
         now = self._nowFcn()
         if (cmf_arrival_time - now).total_seconds() < (-1 * self._filterResultsAfterSeconds):
-            self._logger.debug(f"Filtering '{schedule_id}' since predicted arrival time ({cmf_arrival_time}) is in the past (now = {now})")
+            self._logger.debug(f"Filtering '{schedule_id}'. arrival time ({cmf_arrival_time}) is in the past")
             return None
 
         std_dev = self._inboundOffsetStdDev if direction == Direction.IN_BOUND else self._outboundOffsetStdDev
@@ -277,10 +277,10 @@ class TrainPredictor:
             self._train_prediction_cache[schedule_id] = train
         elif schedule_id in self._train_prediction_cache:
             cached_train = self._train_prediction_cache[schedule_id]
-            self._logger.debug(f"Using existing cached prediction for '{schedule_id}' {cached_train}")
+            self._logger.debug(f"Using cached prediction for '{schedule_id}'")
             return cached_train
 
-        self._logger.debug(f"Computed train for '{schedule_id}' {train}")
+        self._logger.debug(f"Using computed prediction for '{schedule_id}'")
         return train
 
     # xxx doc
@@ -324,7 +324,6 @@ class TrainPredictor:
         return cmf_time
 
     def _analyze_data(self, count, schedule_json):
-        gc.collect()
         trains = []
         included = {item["id"]: item for item in schedule_json.get("included", [])}
 

@@ -129,7 +129,6 @@ class Display:
         self._matrix_portal.display.root_group.append(self._tLogo)
 
         self._mode = DisplayMode.ARRIVAL_TIMES
-        gc.collect()
 
     def _initialize_error(self):
         self._error_text_index  = self._matrix_portal.add_text(text_font=ERROR_FONT, text_position=(1, 15), text_wrap=17, text="ERROR Restarting in 1min. Contact Andrew.B.Nitschke@gmail.com")

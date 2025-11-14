@@ -26,6 +26,8 @@ Currently using `adafruit-circuitpython-matrixportal_m4-en_US-10.0.0`
 
 After setting up CircuitPython we need to install the Adafruit python libraries onto the device. This can be done by running the `install_circuitpython_lib.sh` script. This script installs EVERYTHING from that python bundle. There is a lot more than we need in that lib, but it is only 1MB so it isn't worth it to figure out what we do/don't need.
 
+xxx actually now I cut down on the stuff there
+
 ### `settings.toml`
 
 A `settings.toml` must be created inside this directory containing secrets and API keys. It will be copied over to the device when `install.sh` is run in the next step.

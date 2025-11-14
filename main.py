@@ -12,7 +12,7 @@ from application import Application, ApplicationDependencies
 
 matrix_portal = MatrixPortal(status_neopixel=board.NEOPIXEL)
 
-log_levels = logging_extra.LogLevels(aio_handler=logging_extra.INFO, print_handler=logging_extra.DEBUG)
+log_levels = logging_extra.LogLevels(aio_handler=logging_extra.INFO, print_handler=logging_extra.DEBUG, file_handler=logging_extra.DEBUG)
 logger = logging_extra.newLogger(logging_extra.LoggerDependencies(matrix_portal), log_levels)
 
 mbta_api_key = os.getenv("MBTA_API_KEY")

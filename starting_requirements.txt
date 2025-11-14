@@ -1,0 +1,10 @@
+adafruit-circuitpython-typing
+Adafruit_CircuitPython_MatrixPortal
+Adafruit_CircuitPython_Logging
+Adafruit_CircuitPython_datetime
+Adafruit_CircuitPython_AdafruitIO
+
+# xxx doc other things to hack together odd name differences
+adafruit_connection_manager
+adafruit_io
+neopixel
