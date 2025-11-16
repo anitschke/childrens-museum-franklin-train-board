@@ -34,8 +34,15 @@ class Application:
 
     def _startup(self):
         self._logger.info("starting train board")
-        self._try_method(self._sync_clock)
+
+        # When we initialize we need to make sure we initialize the display
+        # first. If the WiFi is down then the clock sync will fail and
+        # _try_method will attempt to call display.render_error() before
+        # rebooting. But since the display hasn't been initialized
+        # display.render_error() will error out and won't show the error
+        # message.
         self._try_method(self._display.initialize)
+        self._try_method(self._sync_clock)
 
     # _try_method is passed a function to call along with arguments. It will
     # call that function, if the function errors out then it will log the
@@ -44,7 +51,7 @@ class Application:
     # contact me and attempt to fix the issue by doing a soft restart.
     def _try_method(self, method, positional_arguments = [], keyword_arguments = {}):
         attempt_count = 0
-        max_attempt_count = 5
+        max_attempt_count = 5 
         retry_delay = 5
         restart_delay = 60
 
@@ -57,7 +64,18 @@ class Application:
             time.sleep(retry_delay)
             self._logger.debug(f"making additional attempt {attempt_count}")
 
-        self._display.render_error()
+        try:
+            self._display.render_error()
+        except Exception:
+            # We want to squash any errors that come out of render_error. In the
+            # past we ran into issues where if the WiFi wasn't setup then the
+            # display wasn't initialized and would result in render_error()
+            # erroring out and preventing the board from restarting. I fixed
+            # that ordering issues but we still want to make sure that even if
+            # render_error() errors out we can still try to restart the board in
+            # an attempt to fix the issue.
+            pass
+        
         time.sleep(restart_delay)
         supervisor.reload()
             
