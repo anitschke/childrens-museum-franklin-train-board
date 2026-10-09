@@ -119,4 +119,7 @@ When modifying or extending this codebase, adhere to the following rules:
 2. **Synchronize Documentation (`AGENTS.md` & `README.md`):**
    - **`AGENTS.md`**: Whenever architecture, coding conventions, deployment procedures, script usages, or critical constraints change, update this document to keep agent and developer context accurate.
    - **`README.md`**: Whenever user-facing features, hardware configurations, wiring, secrets, setup instructions, or dependencies change, update `README.md` accordingly.
-   - If files are added or removed from the repository, ensure both `AGENTS.md` (directory structure) and `install.sh` (rsync file list) are updated.
+
+3. **Synchronize `install.sh` when Adding/Removing Files:**
+   - Any runtime Python script, graphic asset, or resource file that is added or removed from the project **must be added or removed in `install.sh`** (the `rsync` file list). If this is not done, the file will not be copied to the CircuitPython board during deployment.
+   - Also update the directory layout tree in `AGENTS.md` to reflect the new or removed file.
