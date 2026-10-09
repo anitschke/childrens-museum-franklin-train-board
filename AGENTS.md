@@ -26,6 +26,7 @@ Its primary functions:
 ## 2. Directory & Key File Structure
 
 ```
+├── .github/workflows/ci.yml    # GitHub Actions CI workflow (runs unit tests)
 ├── main.py                     # Entry point for CircuitPython execution
 ├── application.py              # Application lifecycle, main loop, retry/recovery, state machine
 ├── display.py                  # Display driver: arrival times, scrolling text, T-logo, error screen, train sprite
