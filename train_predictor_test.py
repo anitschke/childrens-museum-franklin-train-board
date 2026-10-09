@@ -6,6 +6,7 @@ import os
 import unittest
 import urllib.request
 import logging
+import zoneinfo
 
 mock_logger = logging.getLogger("mock")
 
@@ -60,13 +61,14 @@ class Test_next_trains(unittest.TestCase):
         # sure we can really analyze that real data.
 
         # When we provide the timestamp for "now" we will give the timestamp of
-        # 1am on the current morning. We will do this because if the test is
-        # running late at night there is a chance that there are no more trains
-        # tonight and the test expects that we will get some results back for
-        # the train. So setting the current time to 1am should ensure that we
-        # don't filter out trains that have already happened.
-        now = datetime.now()
-        mock_now = lambda : now.replace(tzinfo=None, hour=1)
+        # 1am on the current morning in America/New_York (the MBTA schedule's timezone).
+        # We will do this because if the test is running late at night there is a chance
+        # that there are no more trains tonight and the test expects that we will get
+        # some results back for the train. Setting the time to 1am of today's MBTA schedule
+        # ensures we don't filter out trains that have already happened.
+        boston_tz = zoneinfo.ZoneInfo("America/New_York")
+        now = datetime.now(boston_tz).replace(tzinfo=None)
+        mock_now = lambda : now.replace(hour=1, minute=0, second=0, microsecond=0)
 
         deps = TrainPredictorDependencies(MockNetwork(), datetime, timedelta, mock_now, mbta_api_key=None, logger=mock_logger)
         train_predictor = TrainPredictor(deps)
@@ -81,7 +83,7 @@ class Test_next_trains(unittest.TestCase):
         # am.
         self.assertEqual(results[0].direction, Direction.IN_BOUND)
 
-        expected_time = now.replace(hour=8)
+        expected_time = now.replace(hour=8, minute=0, second=0, microsecond=0)
         self.assertLess(results[0].time, expected_time)
 
 class Test_fetch_schedules_and_predictions(unittest.TestCase):
